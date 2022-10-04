@@ -2,8 +2,6 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 
-
-
 abstract class RootController extends Controller
 {
     public $api_url;
