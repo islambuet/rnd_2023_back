@@ -37,7 +37,7 @@ abstract class RootController extends Controller
     }
     public function validateInputKeys($inputs,$keys){
         if(!is_array($inputs)){
-            $this->sendErrorResponse(['error'=>'VALIDATION_FAILED','messages' => __("Input Not Found")]);
+            $this->sendErrorResponse(['error'=>'INPUT_NOT_FOUND','messages' => __("Input Not Found")]);
         }
         //checking if any invalid input
         foreach($inputs as $key=>$value){
