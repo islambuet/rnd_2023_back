@@ -15,4 +15,8 @@
         {
             return isset(self::$config[SYSTEM_CONFIGURATIONS_SITE_OFF_LINE])&&(self::$config[SYSTEM_CONFIGURATIONS_SITE_OFF_LINE]==1);
         }
+        public static function isLoginMobileVerificationOn(): bool
+        {
+            return isset(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_MOBILE_VERIFICATION])&&(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_MOBILE_VERIFICATION]==1);
+        }
     }

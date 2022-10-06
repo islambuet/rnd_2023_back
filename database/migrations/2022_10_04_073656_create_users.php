@@ -25,6 +25,7 @@ class CreateUsers extends Migration
             $table->integer('ordering')->default(9999);
             $table->enum('status', [SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE, SYSTEM_STATUS_DELETE])->default(SYSTEM_STATUS_ACTIVE)->comment(SYSTEM_STATUS_ACTIVE.','. SYSTEM_STATUS_INACTIVE.','.SYSTEM_STATUS_DELETE);
             $table->longText('infos')->nullable();
+            $table->timestamp('mobile_authentication_off_end')->nullable();
 
             $table->integer('created_by');
             $table->integer('updated_by')->nullable();

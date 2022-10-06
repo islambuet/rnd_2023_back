@@ -18,7 +18,7 @@ class SystemConfigurationsSeeder extends Seeder
         DB::table(TABLE_CONFIGURATIONS)->insert([
             [
                 'purpose' => SYSTEM_CONFIGURATIONS_SITE_OFF_LINE,
-                'description' => 'Making the application go offline.',
+                'description' => 'Making the application go offline.1 for yes',
                 'config_value' => 0,
                 'created_by' => 1,
                 'created_at' => Carbon::now(),
@@ -27,6 +27,20 @@ class SystemConfigurationsSeeder extends Seeder
                 'purpose' => SYSTEM_CONFIGURATIONS_OTP_EXPIRE_DURATION,
                 'description' => 'OTP expires/Resend OTP in seconds.',
                 'config_value' => 600,
+                'created_by' => 1,
+                'created_at' => Carbon::now(),
+            ],
+            [
+                'purpose' => SYSTEM_CONFIGURATIONS_LOGIN_MOBILE_VERIFICATION,
+                'description' => 'Mobile verification for all.1=yes 0 no',
+                'config_value' => 1,
+                'created_by' => 1,
+                'created_at' => Carbon::now(),
+            ],
+            [
+                'purpose' => SYSTEM_CONFIGURATIONS_MOBILE_SMS_API_TOKEN,
+                'description' => 'SMS system api key',
+                'config_value' => '',
                 'created_by' => 1,
                 'created_at' => Carbon::now(),
             ],
