@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             UserTypesSeeder::class,
             UsersSeeder::class,
             //            SystemTasksSeeder::class,
-            //            SystemConfigurationsSeeder::class,
+            SystemConfigurationsSeeder::class,
         ]);
     }
 }
