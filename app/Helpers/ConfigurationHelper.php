@@ -19,4 +19,8 @@
         {
             return isset(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_MOBILE_VERIFICATION])&&(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_MOBILE_VERIFICATION]==1);
         }
+        public static function getUploadedImageBaseurl():string
+        {
+            return isset(self::$config[SYSTEM_CONFIGURATIONS_UPLOADED_IMAGE_BASEURL])?(self::$config[SYSTEM_CONFIGURATIONS_UPLOADED_IMAGE_BASEURL]):'';
+        }
     }

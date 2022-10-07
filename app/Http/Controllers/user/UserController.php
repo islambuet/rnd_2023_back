@@ -3,6 +3,7 @@ namespace App\Http\Controllers\user;
 
 use App\Helpers\ConfigurationHelper;
 use App\Http\Controllers\RootController;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +22,7 @@ class UserController extends RootController
         $response['messages'] =$this->api_url;
         $this->sendErrorResponse($response);
     }
+
     public function login(Request $request): JsonResponse
     {
         //input validation start
@@ -33,7 +35,7 @@ class UserController extends RootController
         //input validation end
         $user = DB::table(TABLE_USERS)->where('username', $itemNew['username'])->first();
         if($user){
-            $time=time();
+            $time=Carbon::now();
             if ($user->status == SYSTEM_STATUS_ACTIVE) {
                 if (Hash::check($itemNew['password'], $user->password)) {
                     $mobile_verification_required=true;
@@ -44,7 +46,7 @@ class UserController extends RootController
                         $mobile_verification_required=false;
                     }
                     //2.if global verification off
-                    if(!ConfigurationHelper::isLoginMobileVerificationOn()){
+                    else if(!ConfigurationHelper::isLoginMobileVerificationOn()){
                         $mobile_verification_required=false;
                     }
                     //3.check browser already validated or maximum browser
@@ -54,8 +56,9 @@ class UserController extends RootController
                     }
                     else{
                         //user
+                        $user->authToken=$this->getAuthToken();
                         //menus
-                        $response['user']=$user;
+                        $response['user']=$this->getUserForApi($user);
                         return response()->json(['error' => '', 'messages' => __('Logged in successfully'), 'data' =>$response]);
                     }
 
@@ -73,5 +76,20 @@ class UserController extends RootController
         else{
             return response()->json(['error' => 'USER_NOT_FOUND', 'messages' => __('This user does not exits')]);
         }
+    }
+    private function getAuthToken(): string
+    {
+        $authToken=Hash::make(bin2hex(random_bytes(rand(10,15))));
+        return '1_'.$authToken;
+    }
+    private function getUserForApi($user): object
+    {
+        $apiUser= (object) [];
+        foreach(['id','name','authToken'] as $key){
+            $apiUser->$key=$user->$key;
+        }
+        $apiUser->infos = (object)($user->infos ? json_decode($user->infos, true) :  []);
+        $apiUser->profile_picture_url = property_exists($apiUser->infos,'profile_picture')?ConfigurationHelper::getUploadedImageBaseurl().$apiUser->infos->profile_picture:'';
+        return $apiUser;
     }
 }

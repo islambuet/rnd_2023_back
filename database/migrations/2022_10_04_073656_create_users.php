@@ -17,7 +17,7 @@ class CreateUsers extends Migration
             $table->increments('id');
             $table->string('username', 50);
             $table->string('password');
-            $table->integer('user_group_id')->default(4);
+            $table->integer('user_group_id')->default(3);
             $table->integer('user_type_id')->default(1);
             $table->string('name');
             $table->string('email', 100)->nullable();
