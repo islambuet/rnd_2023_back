@@ -1,7 +1,9 @@
 # create new project
     laravel new laravel_2023
 ## How to run from git
+    copy storage folder    
     composer install
+    copy .env
     #php artisan key:generate
 # Run as server
     php artisan serve
