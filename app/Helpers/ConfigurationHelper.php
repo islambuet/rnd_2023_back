@@ -3,7 +3,7 @@
     use Illuminate\Support\Facades\DB;
     class ConfigurationHelper
     {
-        public static array $config = array();
+        public static $config = array();
         public static function load_config()
         {
             $results = DB::table(TABLE_CONFIGURATIONS)->where('status', SYSTEM_STATUS_ACTIVE)->get();
@@ -18,6 +18,10 @@
         public static function isLoginMobileVerificationOn(): bool
         {
             return isset(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_MOBILE_VERIFICATION])&&(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_MOBILE_VERIFICATION]==1);
+        }
+        public static function getLoginSessionExpireHours():string
+        {
+            return isset(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_SESSION_EXPIRE_HOURS])?((float)self::$config[SYSTEM_CONFIGURATIONS_LOGIN_SESSION_EXPIRE_HOURS]):1;
         }
         public static function getUploadedImageBaseurl():string
         {

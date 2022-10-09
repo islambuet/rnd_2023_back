@@ -57,7 +57,7 @@ class UserController extends RootController
                     }
                     else{
                         //user
-                        $user->authToken=$this->getAuthToken();
+                        $user->authToken=UserHelper::getNewAuthToken($user);
                         //menus
                         $response['user']=$this->getUserForApi($user);
                         return response()->json(['error' => '', 'messages' => __('Logged in successfully'), 'data' =>$response]);
@@ -77,11 +77,6 @@ class UserController extends RootController
         else{
             return response()->json(['error' => 'USER_NOT_FOUND', 'messages' => __('This user does not exits')]);
         }
-    }
-    private function getAuthToken(): string
-    {
-        $authToken=Hash::make(bin2hex(random_bytes(rand(10,15))));
-        return '1_'.$authToken;
     }
     private function getUserForApi($user): object
     {

@@ -38,6 +38,13 @@ class SystemConfigurationsSeeder extends Seeder
                 'created_at' => Carbon::now(),
             ],
             [
+                'purpose' => SYSTEM_CONFIGURATIONS_LOGIN_SESSION_EXPIRE_HOURS,
+                'description' => 'User Session Expires in hours',
+                'config_value' => 25,
+                'created_by' => 1,
+                'created_at' => Carbon::now(),
+            ],
+            [
                 'purpose' => SYSTEM_CONFIGURATIONS_MOBILE_SMS_API_TOKEN,
                 'description' => 'SMS system api key',
                 'config_value' => '',
