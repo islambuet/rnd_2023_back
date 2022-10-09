@@ -3,6 +3,8 @@ namespace App\Helpers;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+
+
 class OtpHelper {
     //reason 0=login
     public static function setOtp($user_id,$reason=0): array
@@ -10,7 +12,7 @@ class OtpHelper {
         $time=Carbon::now();
         $result = DB::table(TABLE_USER_OTPS)->where('user_id',$user_id)->orderBy('id','DESC')->first();
         if($result && is_null($result->last_used_at) && ($result->expires_at>$time)){
-                return ['error'=>'OLD_OTP','messages'=>'old otp','otp'=>$result];
+                return ['error'=>'OLD_OTP','messages'=>'old otp','otpInfo'=>$result];
         }
         else{
             $itemNew=array();
@@ -20,7 +22,7 @@ class OtpHelper {
             $itemNew['created_at']=$time;
             $itemNew['expires_at']=$time->copy()->addSeconds(ConfigurationHelper::getOtpExpireDuration());
             $itemNew['id'] = DB::table(TABLE_USER_OTPS)->insertGetId($itemNew);
-            return ['error'=>'','messages'=>'new otp','otp'=>$itemNew];
+            return ['error'=>'','messages'=>'new otp','otpInfo'=>(object)$itemNew];
         }
     }
     public static function checkOtp($user_id,$otp): array

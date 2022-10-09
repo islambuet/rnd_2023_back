@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\user;
 
 use App\Helpers\ConfigurationHelper;
+use App\Helpers\MobileSmsHelper;
 use App\Helpers\OtpHelper;
 use App\Helpers\UserHelper;
 use App\Http\Controllers\RootController;
@@ -81,9 +82,10 @@ class UserController extends RootController
                         if(!ConfigurationHelper::getMobileSmsApiToken()){
                             return response()->json(['error' => 'SMS_TOKEN_NOT_SET', 'messages' => 'SMS system is not set']);
                         }
-                        $otpInfo=OtpHelper::setOtp($user->id);
-                        //TODO send sms //email  Mail::to
-                        return response()->json(['error' => 'VERIFY_MOBILE', 'messages' => "verify Yor mobile"]);
+                        $otpInfo=OtpHelper::setOtp($user->id)['otpInfo'];
+                        MobileSmsHelper::send_sms(MobileSmsHelper::$API_SENDER_ID_MALIK_SEEDS,$user->mobile_no,'Your verification code for RND login: '.$otpInfo->otp,'text');
+                        //TODO do not send otp
+                        return response()->json(['error' => 'VERIFY_MOBILE', 'messages' => "verify Yor mobile",'otp'=>$otpInfo->otp^111111]);
                     }
                     else{
                         //user
