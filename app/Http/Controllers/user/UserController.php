@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\user;
 
 use App\Helpers\ConfigurationHelper;
+use App\Helpers\UserHelper;
 use App\Http\Controllers\RootController;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;

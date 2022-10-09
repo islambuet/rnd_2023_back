@@ -17,8 +17,8 @@ class CreateUsers extends Migration
             $table->increments('id');
             $table->string('username', 50);
             $table->string('password');
-            $table->integer('user_group_id')->default(3);
-            $table->integer('user_type_id')->default(1);
+            $table->smallInteger('user_group_id')->default(3);
+            $table->tinyInteger('user_type_id')->default(1);
             $table->string('name');
             $table->string('email', 100)->nullable();
             $table->string('mobile_no')->nullable();
@@ -26,6 +26,7 @@ class CreateUsers extends Migration
             $table->enum('status', [SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE, SYSTEM_STATUS_DELETE])->default(SYSTEM_STATUS_ACTIVE)->comment(SYSTEM_STATUS_ACTIVE.','. SYSTEM_STATUS_INACTIVE.','.SYSTEM_STATUS_DELETE);
             $table->longText('infos')->nullable();
             $table->timestamp('mobile_authentication_off_end')->nullable();
+            $table->smallInteger('max_logged_browser')->default(3);
 
             $table->integer('created_by');
             $table->integer('updated_by')->nullable();

@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateUserGroups extends Migration
 {
-    public array $actions = [
+    public $actions = [
         '0' => 'VIEW',
         '1' => 'ADD',
         '2' => 'EDIT',
