@@ -23,7 +23,7 @@ class UserController extends RootController
         if($this->user){
             $response['user']=$this->getUserForApi($this->user);
         }
-        $this->sendErrorResponse($response);
+        return response()->json($response);
     }
 
     public function login(Request $request): JsonResponse
@@ -70,8 +70,10 @@ class UserController extends RootController
                         //user
                         $user->authToken=UserHelper::getNewAuthToken($user);
                         //menus
+                        $response['error']='';
+                        $response['messages']=__('Logged in successfully');
                         $response['user']=$this->getUserForApi($user);
-                        return response()->json(['error' => '', 'messages' => __('Logged in successfully'), 'data' =>$response]);
+                        return response()->json($response);
                     }
 
                 }
