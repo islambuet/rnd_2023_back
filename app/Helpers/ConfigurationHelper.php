@@ -21,7 +21,7 @@
         }
         public static function getLoginSessionExpireHours():float
         {
-            return isset(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_SESSION_EXPIRE_HOURS])?((float)self::$config[SYSTEM_CONFIGURATIONS_LOGIN_SESSION_EXPIRE_HOURS]):1;
+            return isset(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_SESSION_EXPIRE_HOURS])?(float)self::$config[SYSTEM_CONFIGURATIONS_LOGIN_SESSION_EXPIRE_HOURS]:1;
         }
         public static function getUploadedImageBaseurl():string
         {
@@ -29,7 +29,11 @@
         }
         public static function getOtpExpireDuration():float
         {
-            return isset(self::$config[SYSTEM_CONFIGURATIONS_OTP_EXPIRE_DURATION])?((float)self::$config[SYSTEM_CONFIGURATIONS_OTP_EXPIRE_DURATION]):300;
+            return isset(self::$config[SYSTEM_CONFIGURATIONS_OTP_EXPIRE_DURATION])?(float)self::$config[SYSTEM_CONFIGURATIONS_OTP_EXPIRE_DURATION]:300;
+        }
+        public static function getMobileSmsApiToken():string
+        {
+            return self::$config[SYSTEM_CONFIGURATIONS_MOBILE_SMS_API_TOKEN] ?? '';
         }
 
     }

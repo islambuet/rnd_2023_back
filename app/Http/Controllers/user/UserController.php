@@ -10,15 +10,14 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-
-
 class UserController extends RootController
 {
     public function __construct(Request $request)
     {
         parent::__construct($request);
     }
-    public function initialize(){
+    public function initialize(): JsonResponse
+    {
         $response = [];
         $response['error'] ='';
         if($this->user){
@@ -33,6 +32,7 @@ class UserController extends RootController
         $validation_rule = [];
         $validation_rule['username'] = ['required', 'alpha_dash'];
         $validation_rule['password'] = ['required'];
+        $validation_rule['otp'] = ['min:4','max:6'];
         $itemNew = $request->input('item');
         $this->validateInputKeys($itemNew,array_keys($validation_rule));
         $this->validateInputValues($itemNew, $validation_rule);
@@ -45,7 +45,18 @@ class UserController extends RootController
                     $mobile_verification_required=true;
                     //check mobile verification required
                     //1.if personal verification off
-                    if($user->mobile_authentication_off_end>$time)//for user if inactive
+                    if(isset($itemNew['otp'])){
+                        //check and verify otp
+                        $otpCheckInfo=OtpHelper::checkOtp($user->id,$itemNew['otp']);
+                        if(!$otpCheckInfo['error']){
+                            OtpHelper::updateOtp($otpCheckInfo['otpInfo']);
+                            $mobile_verification_required=false;
+                        }
+                        else{
+                            return response()->json($otpCheckInfo);
+                        }
+                    }
+                    else if($user->mobile_authentication_off_end>$time)//for user if inactive
                     {
                         $mobile_verification_required=false;
                     }
@@ -64,9 +75,15 @@ class UserController extends RootController
                         }
                     }
                     if($mobile_verification_required){
-                        $otpInfo=OtpHelper::setOtp($user->id,0);
-                        //send sms //email  Mail::to
-                        return response()->json(['error' => 'MOBILE_VERIFICATION_REQUIRED', 'messages' => $otpInfo['messages']]);
+                        if(!($user->mobile_no)){
+                            return response()->json(['error' => 'MOBILE_NUMBER_NOT_SET', 'messages' => 'Your mobile number is not set']);
+                        }
+                        if(!ConfigurationHelper::getMobileSmsApiToken()){
+                            return response()->json(['error' => 'SMS_TOKEN_NOT_SET', 'messages' => 'SMS system is not set']);
+                        }
+                        $otpInfo=OtpHelper::setOtp($user->id);
+                        //TODO send sms //email  Mail::to
+                        return response()->json(['error' => 'VERIFY_MOBILE', 'messages' => "verify Yor mobile"]);
                     }
                     else{
                         //user
