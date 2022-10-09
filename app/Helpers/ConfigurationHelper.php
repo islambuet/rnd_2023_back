@@ -19,7 +19,7 @@
         {
             return isset(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_MOBILE_VERIFICATION])&&(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_MOBILE_VERIFICATION]==1);
         }
-        public static function getLoginSessionExpireHours():string
+        public static function getLoginSessionExpireHours():float
         {
             return isset(self::$config[SYSTEM_CONFIGURATIONS_LOGIN_SESSION_EXPIRE_HOURS])?((float)self::$config[SYSTEM_CONFIGURATIONS_LOGIN_SESSION_EXPIRE_HOURS]):1;
         }
@@ -27,4 +27,9 @@
         {
             return isset(self::$config[SYSTEM_CONFIGURATIONS_UPLOADED_IMAGE_BASEURL])?(self::$config[SYSTEM_CONFIGURATIONS_UPLOADED_IMAGE_BASEURL]):'';
         }
+        public static function getOtpExpireDuration():float
+        {
+            return isset(self::$config[SYSTEM_CONFIGURATIONS_OTP_EXPIRE_DURATION])?((float)self::$config[SYSTEM_CONFIGURATIONS_OTP_EXPIRE_DURATION]):300;
+        }
+
     }

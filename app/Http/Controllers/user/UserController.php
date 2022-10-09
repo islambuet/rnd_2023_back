@@ -2,6 +2,7 @@
 namespace App\Http\Controllers\user;
 
 use App\Helpers\ConfigurationHelper;
+use App\Helpers\OtpHelper;
 use App\Helpers\UserHelper;
 use App\Http\Controllers\RootController;
 use Carbon\Carbon;
@@ -63,8 +64,9 @@ class UserController extends RootController
                         }
                     }
                     if($mobile_verification_required){
-                        //send otp
-                        return response()->json(['error' => 'MOBILE_VERIFICATION_REQUIRED', 'messages' => __('Verify your mobile')]);
+                        $otpInfo=OtpHelper::setOtp($user->id,0);
+                        //send sms //email  Mail::to
+                        return response()->json(['error' => 'MOBILE_VERIFICATION_REQUIRED', 'messages' => $otpInfo['messages']]);
                     }
                     else{
                         //user

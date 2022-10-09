@@ -6,6 +6,7 @@ define('TABLE_USER_TYPES', $db_main.'.user_types');
 
 define('TABLE_USER_AUTH_TOKENS', $db_main.'.user_auth_tokens');
 define('TABLE_USER_SAVE_TOKENS', $db_main.'.user_save_tokens');
+define('TABLE_USER_OTPS', $db_main.'.user_otps');
 
 define('TABLE_TASKS', $db_main.'.system_tasks');
 define('TABLE_USER_HIDDEN_COLUMNS', $db_main.'.system_users_hidden_columns');
