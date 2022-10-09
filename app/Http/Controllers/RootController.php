@@ -1,18 +1,21 @@
 <?php
 namespace App\Http\Controllers;
 use App\Helpers\ConfigurationHelper;
+use App\Helpers\UserHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 abstract class RootController extends Controller
 {
     public $api_url;
+    public $user;
     public function __construct(Request $request)
     {
         $api_url=substr($request->path(),strlen('api/'));
         $this->api_url=substr($api_url,0,strrpos($api_url,'/'));
         ConfigurationHelper::load_config();
         $this->checkApiOffline($request);
+        $this->user=UserHelper::getLoggedUser();
     }
     public function sendErrorResponse($errorResponse){
         $response = response()->json($errorResponse);

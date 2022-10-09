@@ -9,16 +9,46 @@ class UserHelper {
 
 	public static $loggedUser = null;
 	public static function getLoggedUser(){
+        if (!UserHelper::$loggedUser) {
+            $authTokenInfo=self::getAuthTokenInfo();
+            if($authTokenInfo){
+                $time=Carbon::now();
+                if($authTokenInfo->expires_at>$time){
+                    $user = DB::table(TABLE_USERS)->where('id',$authTokenInfo->user_id)->first();
+                    if($user){
+                        //AuthToken ='id_token'
+                        $user->authToken=$authTokenInfo->id.'_'.$authTokenInfo->token;
+                        //update AuthToken
+                        DB::table(TABLE_USER_AUTH_TOKENS)->where('id',$authTokenInfo->id)->update(['last_used_at'=>$time,'expires_at'=>$time->copy()->addHours(ConfigurationHelper::getLoginSessionExpireHours())]);
+                        self::$loggedUser=$user;
+
+                    }
+                }
+            }
+        }
+        return UserHelper::$loggedUser;
+
         //self::getAuthToken();
         //if expires return null user
         //get user
         //update used_at and expire at
         //echo \Request::bearerToken();
     }
-    public static function getAuthToken(){
-        //bet bearerToken
-        //split id and token
-        //get from database
+    public static function getAuthTokenInfo(){
+        $tokenInfo=null;
+        //AuthToken ='id_token'
+        $bearerToken= explode('_',\Request::bearerToken(),2);
+        if(count($bearerToken)==2){
+            $query=DB::table(TABLE_USER_AUTH_TOKENS);
+            $query->where('id',$bearerToken[0]);
+            $query->where('token',$bearerToken[1]);
+            $result = $query->first();
+            if($result){
+                $tokenInfo=$result;
+            }
+        }
+        return $tokenInfo;
+
     }
     public static function getNewAuthToken($user): string
     {
@@ -66,9 +96,7 @@ class UserHelper {
             DB::rollback();
             return response()->json(['error' => 'DB_SAVE_FAILED', 'errorMessage'=>__('response.DB_SAVE_FAILED')],408);
         }
-
-
-        //return with id_token
+        //AuthToken ='id_token'
         return $id.'_'.$authToken;
     }
 }

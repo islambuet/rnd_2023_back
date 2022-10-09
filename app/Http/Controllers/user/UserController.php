@@ -19,8 +19,10 @@ class UserController extends RootController
     }
     public function initialize(){
         $response = [];
-        $response['error'] ='API_OFFLINE';
-        $response['messages'] =$this->api_url;
+        $response['error'] ='';
+        if($this->user){
+            $response['user']=$this->getUserForApi($this->user);
+        }
         $this->sendErrorResponse($response);
     }
 
@@ -87,6 +89,7 @@ class UserController extends RootController
         }
         $apiUser->infos = (object)($user->infos ? json_decode($user->infos, true) :  []);
         $apiUser->profile_picture_url = property_exists($apiUser->infos,'profile_picture')?ConfigurationHelper::getUploadedImageBaseurl().$apiUser->infos->profile_picture:'';
+        //include tasks
         return $apiUser;
     }
 }
