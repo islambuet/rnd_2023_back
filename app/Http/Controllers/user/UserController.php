@@ -53,7 +53,15 @@ class UserController extends RootController
                         $mobile_verification_required=false;
                     }
                     //3.check browser validated before
-
+                    else{
+                        $authTokenInfo=UserHelper::getAuthTokenInfo();
+                        if($authTokenInfo){
+                            //was Logged within 10 days
+                            if(($authTokenInfo->user_id== $user->id) &&($authTokenInfo->expires_at> $time->copy()->subDays(10))){
+                                $mobile_verification_required=false;
+                            }
+                        }
+                    }
                     if($mobile_verification_required){
                         //send otp
                         return response()->json(['error' => 'MOBILE_VERIFICATION_REQUIRED', 'messages' => __('Verify your mobile')]);
@@ -91,5 +99,13 @@ class UserController extends RootController
         $apiUser->profile_picture_url = property_exists($apiUser->infos,'profile_picture')?ConfigurationHelper::getUploadedImageBaseurl().$apiUser->infos->profile_picture:'';
         //include tasks
         return $apiUser;
+    }
+    public function logout(): JsonResponse
+    {
+        $authTokenInfo=UserHelper::getAuthTokenInfo();
+        if($authTokenInfo){
+            DB::table(TABLE_USER_AUTH_TOKENS)->where('id',$authTokenInfo->id)->update(['expires_at'=>Carbon::now()]);
+        }
+        return response()->json(['error' => '', 'messages' => __('Logout success')]);
     }
 }

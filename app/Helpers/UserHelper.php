@@ -14,7 +14,7 @@ class UserHelper {
             if($authTokenInfo){
                 $time=Carbon::now();
                 if($authTokenInfo->expires_at>$time){
-                    $user = DB::table(TABLE_USERS)->where('id',$authTokenInfo->user_id)->first();
+                    $user = DB::table(TABLE_USERS)->where('id',$authTokenInfo->user_id)->where('status',SYSTEM_STATUS_ACTIVE)->first();
                     if($user){
                         //AuthToken ='id_token'
                         $user->authToken=$authTokenInfo->id.'_'.$authTokenInfo->token;
