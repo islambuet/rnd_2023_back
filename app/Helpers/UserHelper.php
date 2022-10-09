@@ -28,11 +28,24 @@ class UserHelper {
         $clientInfo['REMOTE_ADDR']=\Request::server('REMOTE_ADDR');
         $clientInfo['HTTP_USER_AGENT']=\Request::server('HTTP_USER_AGENT');
 
-        $id=0;
+        $time=Carbon::now();
+        //inactive browsers ids
+        $removeTokenIds=array();
+        $query=DB::table(TABLE_USER_AUTH_TOKENS);
+        $query->where('user_id',$user->id);
+        $query->where('expires_at','>=',$time);
+        $query->orderBy('id','DESC');
+        $query->offset($user->max_logged_browser-1);
+        $query->limit(500);
+        $results = $query->get();
+        foreach ($results as $result) {
+            $removeTokenIds[]=$result->id;
+        }
+
         DB::beginTransaction();
         try{
             //save token with client info
-            $time=Carbon::now();
+
             $itemNew=array();
             $itemNew['user_id']=$user->id;
             $itemNew['token']=$authToken;
@@ -42,6 +55,9 @@ class UserHelper {
             $itemNew['expires_at']=$time->copy()->addHours(ConfigurationHelper::getLoginSessionExpireHours());
             $id = DB::table(TABLE_USER_AUTH_TOKENS)->insertGetId($itemNew);
             // and inactive max browser token
+            if($removeTokenIds){
+                DB::table(TABLE_USER_AUTH_TOKENS)->whereIn('id',$removeTokenIds)->update(['expires_at'=>$time]);
+            }
             DB::commit();
         }
         catch (\Exception $ex) {

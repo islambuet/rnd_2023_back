@@ -50,9 +50,10 @@ class UserController extends RootController
                     else if(!ConfigurationHelper::isLoginMobileVerificationOn()){
                         $mobile_verification_required=false;
                     }
-                    //3.check browser already validated or maximum browser
+                    //3.check browser validated before
 
                     if($mobile_verification_required){
+                        //send otp
                         return response()->json(['error' => 'MOBILE_VERIFICATION_REQUIRED', 'messages' => __('Verify your mobile')]);
                     }
                     else{
