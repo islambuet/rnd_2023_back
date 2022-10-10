@@ -2,7 +2,6 @@
 namespace App\Helpers;
 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 class TaskHelper
 {
     public static $MAX_MODULE_ACTIONS = 7;
@@ -37,61 +36,60 @@ class TaskHelper
         }
         return $permissions;
     }
-//    public static function getUserGroupMenu($userGroupRole): array
-//    {
-//        $role = [];
-//        if (strlen($userGroupRole['action_0']) > 1) {
-//            $role = explode(',', trim($userGroupRole['action_0'], ','));
-//        }
-//
-//        $tasks = DB::table(TABLE_SYSTEM_TASKS)
-//            ->select('id', 'name', 'type', 'parent', 'type', 'url', 'ordering', 'status')
-//            ->orderBy('ordering', 'ASC')
-//            ->where('status', SYSTEM_STATUS_ACTIVE)
-//            ->get()->toArray();
-//        $children = [];
-//        foreach ($tasks as $task) {
-//            $task = (array) $task;
-//            if ($task['type'] == 'TASK') {
-//                if (in_array($task['id'], $role)) {
-//                    $children[$task['parent']][$task['id']] = $task;
-//                }
-//            } else {
-//                $children[$task['parent']][$task['id']] = $task;
-//            }
-//        }
-//        $tree = [];
-//        $max_level = 0;
-//
-//        if (isset($children[0])) {
-//            $tree = self::getUserGroupSubMenu(1, $max_level, '', '', $children, $children[0]);
-//        }
-//        return ['max_level' => $max_level, 'menu' => $tree];
-//    }
-//    public static function getUserGroupSubMenu($level, &$max_level, $parent_class, $prefix, $list, $parent): array
-//    {
-//        $tree = [];
-//        foreach ($parent as $key => $element) {
-//            $element['level'] = $level;
-//            $element['parent_class'] = $parent_class;
-//            $element['prefix,'] = $prefix;
-//            //$tree[] = $element;
-//            if (isset($list[$element['id']])) {
-//                $children = self::getUserGroupSubMenu($level + 1, $max_level, $parent_class . ' parent_' . $element['id'], $prefix . '- ', $list, $list[$element['id']]);
-//                if ($children) {
-//                    $element['children'] = $children;
-//                    $tree[] = $element;
-//                }
-//            } else {
-//                if ($element['type'] == 'TASK') {
-//                    $tree[] = $element;
-//                    if ($level > $max_level) {
-//                        $max_level = $level;
-//                    }
-//                }
-//            }
-//        }
-//        return $tree;
-//
-//    }
+    public static function getUserGroupTasks($userGroupRole): array
+    {
+        $role = [];
+        if (strlen($userGroupRole->action_0) > 1) {
+            $role = explode(',', trim($userGroupRole->action_0, ','));
+        }
+
+
+        $tasks = DB::table(TABLE_TASKS)
+            ->select('id', 'name', 'type', 'parent', 'url', 'ordering', 'status')
+            ->orderBy('ordering', 'ASC')
+            ->where('status', SYSTEM_STATUS_ACTIVE)
+            ->get();
+        $children = [];
+        foreach ($tasks as $task) {
+            if ($task->type == 'TASK') {
+                if (in_array($task->id, $role)) {
+                    $children[$task->parent][$task->id] = $task;
+                }
+            }
+            else {
+                $children[$task->parent][$task->id] = $task;
+            }
+        }
+        $tree = [];
+        $max_level = 0;
+
+        if (isset($children[0])) {
+            $tree = self::getUserGroupSubTasks(1, $max_level, '', '', $children, $children[0]);
+        }
+        return ['max_level' => $max_level, 'tasksTree' => $tree];
+    }
+    public static function getUserGroupSubTasks($level, &$max_level, $parent_class, $prefix, $list, $parent): array
+    {
+        $tree = [];
+        foreach ($parent as $element) {
+            $element->level = $level;
+            $element->parent_class = $parent_class;
+            $element->prefix = $prefix;
+            if (isset($list[$element->id])) {
+                $children = self::getUserGroupSubTasks($level + 1, $max_level, $parent_class . ' parent_' . $element->id, $prefix . '- ', $list, $list[$element->id]);
+                if ($children) {
+                    $element->children = $children;
+                    $tree[] = $element;
+                }
+            } else {
+                if ($element->type == 'TASK') {
+                    $tree[] = $element;
+                    if ($level > $max_level) {
+                        $max_level = $level;
+                    }
+                }
+            }
+        }
+        return $tree;
+    }
 }

@@ -121,9 +121,7 @@ class UserController extends RootController
         }
         $apiUser->infos = (object)($user->infos ? json_decode($user->infos, true) :  []);
         $apiUser->profile_picture_url = property_exists($apiUser->infos,'profile_picture')?ConfigurationHelper::getUploadedImageBaseurl().$apiUser->infos->profile_picture:'';
-        //$apiUser->userGroupRole=$user->userGroupRole;
-
-        //include tasks
+        $apiUser->tasks=TaskHelper::getUserGroupTasks($user->userGroupRole);
         return $apiUser;
     }
     public function logout(): JsonResponse
