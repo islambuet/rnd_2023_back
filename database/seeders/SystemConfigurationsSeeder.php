@@ -33,7 +33,7 @@ class SystemConfigurationsSeeder extends Seeder
             [
                 'purpose' => SYSTEM_CONFIGURATIONS_LOGIN_MOBILE_VERIFICATION,
                 'description' => 'Mobile verification for all.1=yes 0 no',
-                'config_value' => 0,
+                'config_value' => 1,
                 'created_by' => 1,
                 'created_at' => Carbon::now(),
             ],

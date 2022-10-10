@@ -4,6 +4,7 @@ namespace App\Http\Controllers\user;
 use App\Helpers\ConfigurationHelper;
 use App\Helpers\MobileSmsHelper;
 use App\Helpers\OtpHelper;
+use App\Helpers\TaskHelper;
 use App\Helpers\UserHelper;
 use App\Http\Controllers\RootController;
 use Carbon\Carbon;
@@ -84,12 +85,12 @@ class UserController extends RootController
                         }
                         $otpInfo=OtpHelper::setOtp($user->id)['otpInfo'];
                         MobileSmsHelper::send_sms(MobileSmsHelper::$API_SENDER_ID_MALIK_SEEDS,$user->mobile_no,'Your verification code for RND login: '.$otpInfo->otp,'text');
-                        //TODO do not send otp
-                        return response()->json(['error' => 'VERIFY_MOBILE', 'messages' => "verify Yor mobile",'otp'=>$otpInfo->otp^111111]);
+                        return response()->json(['error' => 'VERIFY_MOBILE', 'messages' => "Verify your mobile",'otp'=>$otpInfo->otp^111111]);
                     }
                     else{
                         //user
                         $user->authToken=UserHelper::getNewAuthToken($user);
+                        $user->userGroupRole = TaskHelper::getUserGroupRole($user->user_group_id);
                         //menus
                         $response['error']='';
                         $response['messages']=__('Logged in successfully');
@@ -120,6 +121,8 @@ class UserController extends RootController
         }
         $apiUser->infos = (object)($user->infos ? json_decode($user->infos, true) :  []);
         $apiUser->profile_picture_url = property_exists($apiUser->infos,'profile_picture')?ConfigurationHelper::getUploadedImageBaseurl().$apiUser->infos->profile_picture:'';
+        //$apiUser->userGroupRole=$user->userGroupRole;
+
         //include tasks
         return $apiUser;
     }
