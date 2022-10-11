@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers;
 use App\Helpers\ConfigurationHelper;
+use App\Helpers\TaskHelper;
 use App\Helpers\UserHelper;
 use Illuminate\Support\Facades\Validator;
 
@@ -8,6 +9,7 @@ abstract class RootController extends Controller
 {
     public $api_url;
     public $user;
+    public $permissions;
 
     public function __construct()
     {
@@ -18,6 +20,7 @@ abstract class RootController extends Controller
         ConfigurationHelper::load_config();
         $this->checkApiOffline();
         $this->user=UserHelper::getLoggedUser();
+        $this->permissions=TaskHelper::getPermissions($this->api_url,$this->user);
     }
     public function sendErrorResponse($errorResponse){
         $response = response()->json($errorResponse);

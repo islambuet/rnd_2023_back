@@ -22,13 +22,13 @@ class TaskHelper
         }
         return $role;
     }
-    public static function getPermissions($url, $userGroupRole): object
+    public static function getPermissions($url, $user): object
     {
         $permissions = (object)[];
         $task = DB::table(TABLE_TASKS)->where('url', $url)->select('id')->first();
         $taskId = $task ? $task->id : 0;
         for ($i = 0; $i < self::$MAX_MODULE_ACTIONS; $i++) {
-            if (strpos($userGroupRole->{'action_' . $i}, ',' . $taskId . ',') !== false) {
+            if ($user && (strpos($user->userGroupRole->{'action_' . $i}, ',' . $taskId . ',') !== false)) {
                 $permissions->{'action_' . $i} = 1;
             } else {
                 $permissions->{'action_' . $i} = 0;
