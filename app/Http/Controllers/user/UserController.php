@@ -9,15 +9,11 @@ use App\Helpers\UserHelper;
 use App\Http\Controllers\RootController;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 class UserController extends RootController
 {
-    public function __construct(Request $request)
-    {
-        parent::__construct($request);
-    }
+
     public function initialize(): JsonResponse
     {
         $response = [];
@@ -27,16 +23,19 @@ class UserController extends RootController
         }
         return response()->json($response);
     }
-
-    public function login(Request $request): JsonResponse
+    public function login(): JsonResponse
     {
         //input validation start
         $validation_rule = [];
         $validation_rule['username'] = ['required', 'alpha_dash'];
         $validation_rule['password'] = ['required'];
         $validation_rule['otp'] = ['min:4','max:6'];
-        $itemNew = $request->input('item');
+
+        /** @noinspection PhpUndefinedClassInspection */
+        $itemNew =\Request::input('item');
+
         $this->validateInputKeys($itemNew,array_keys($validation_rule));
+
         $this->validateInputValues($itemNew, $validation_rule);
         //input validation end
         $user = DB::table(TABLE_USERS)->where('username', $itemNew['username'])->first();
@@ -85,7 +84,7 @@ class UserController extends RootController
                         }
                         $otpInfo=OtpHelper::setOtp($user->id)['otpInfo'];
                         MobileSmsHelper::send_sms(MobileSmsHelper::$API_SENDER_ID_MALIK_SEEDS,$user->mobile_no,'Your verification code for RND login: '.$otpInfo->otp,'text');
-                        return response()->json(['error' => 'VERIFY_MOBILE', 'messages' => "Verify your mobile",'otp'=>$otpInfo->otp^111111]);
+                        return response()->json(['error' => 'VERIFY_MOBILE', 'messages' => 'Verify your mobile','otp'=>$otpInfo->otp^111111]);
                     }
                     else{
                         //user

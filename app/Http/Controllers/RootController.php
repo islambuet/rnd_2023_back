@@ -2,19 +2,21 @@
 namespace App\Http\Controllers;
 use App\Helpers\ConfigurationHelper;
 use App\Helpers\UserHelper;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 abstract class RootController extends Controller
 {
     public $api_url;
     public $user;
-    public function __construct(Request $request)
+
+    public function __construct()
     {
-        $api_url=substr($request->path(),strlen('api/'));
+        /** @noinspection PhpUndefinedClassInspection */
+        $api_url=substr(\Request::path(),strlen('api/'));
+
         $this->api_url=substr($api_url,0,strrpos($api_url,'/'));
         ConfigurationHelper::load_config();
-        $this->checkApiOffline($request);
+        $this->checkApiOffline();
         $this->user=UserHelper::getLoggedUser();
     }
     public function sendErrorResponse($errorResponse){
@@ -23,11 +25,12 @@ abstract class RootController extends Controller
         $response->send();
         exit;
     }
-    private function checkApiOffline(Request $request)
+    private function checkApiOffline()
     {
         if(ConfigurationHelper::isApiOffline())
         {
-            $path=$request->path();
+            /** @noinspection PhpUndefinedClassInspection */
+            $path=\Request::path();
             if(!(
                 str_starts_with($path, 'api/user/')||
                 str_starts_with($path, 'api/system-configurations/')
@@ -40,12 +43,12 @@ abstract class RootController extends Controller
     }
     public function validateInputKeys($inputs,$keys){
         if(!is_array($inputs)){
-            $this->sendErrorResponse(['error'=>'INPUT_NOT_FOUND','messages' => __("Input Not Found")]);
+            $this->sendErrorResponse(['error'=>'INPUT_NOT_FOUND','messages' => __('Input Not Found')]);
         }
         //checking if any invalid input
         foreach($inputs as $key=>$value){
             if( !$key || (!in_array ($key,$keys))){
-                $this->sendErrorResponse(['error'=>'VALIDATION_FAILED','messages'=>__($key." is not a valid Input")]);
+                $this->sendErrorResponse(['error'=>'VALIDATION_FAILED','messages'=>__($key. ' is not a valid Input')]);
             }
         }
     }
