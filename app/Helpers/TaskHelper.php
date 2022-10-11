@@ -4,7 +4,7 @@ namespace App\Helpers;
 use Illuminate\Support\Facades\DB;
 class TaskHelper
 {
-    public static $MAX_MODULE_ACTIONS = 7;
+    public static $MAX_MODULE_ACTIONS = 9;
     public static function getUserGroupRole($user_group_id): object
     {
         $role = (object)[];

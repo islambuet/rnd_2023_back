@@ -12,8 +12,10 @@ class CreateUserGroups extends Migration
         '2' => 'EDIT',
         '3' => 'DELETE',
         '4' => 'PRINT',
-        '5' => 'DOWNLOAD',
-        '6' => 'COLUMN_HEADER'
+        '5' => 'CSV',
+        '6' => 'SEARCH',
+        '7' => 'FORWARD',
+        '8' => 'COLUMN_CONTROL'
     ];
 
     /**
