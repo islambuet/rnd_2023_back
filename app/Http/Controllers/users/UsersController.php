@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers\users;
 
+use App\Helpers\TaskHelper;
 use App\Http\Controllers\RootController;
 
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class UsersController extends RootController
             $response= [];
             $response['error'] = '';
             $response['permissions'] = $this->permissions;
+            $response['hidden_columns'] =TaskHelper::getHiddenColumns($this->api_url,$this->user);
             return response()->json($response);
         }
         else{

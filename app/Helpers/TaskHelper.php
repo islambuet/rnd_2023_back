@@ -92,4 +92,21 @@ class TaskHelper
         }
         return $tree;
     }
+    public static function getHiddenColumns($url,$user,$method='list')//forApi
+    {
+        $hidden_columns =[];
+
+        $result = DB::table(TABLE_USER_HIDDEN_COLUMNS.' as hc')
+            ->join(TABLE_TASKS.' as task', 'task.url', '=', 'hc.url')
+            ->select('hc.hidden_columns')
+            ->where('task.url',$url)
+            ->where('hc.method',$method)
+            ->where('hc.user_id',$user->id)
+            ->first();
+        if($result)
+        {
+            $hidden_columns  =json_decode($result->hidden_columns);
+        }
+        return $hidden_columns;
+    }
 }
