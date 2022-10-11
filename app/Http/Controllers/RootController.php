@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 use App\Helpers\ConfigurationHelper;
 use App\Helpers\TaskHelper;
 use App\Helpers\UserHelper;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 abstract class RootController extends Controller
@@ -61,6 +62,23 @@ abstract class RootController extends Controller
         if ($validator->fails()) {
             $this->sendErrorResponse(['error'=>'VALIDATION_FAILED','messages'=>$validator->errors()]);
         }
+    }
+    /*
+	**$data['table_name']	:Save table name
+	**$data['table_id']	 	:Action id
+	**$data['controller'] 	:Controller Name of the Route
+	**$data['method']: 		:Function Name of the Controller
+	**$data['data_old']		:Previous data
+	**$data['data_new']		:New Data
+	**$data['action']		:Add/Edit/Delete
+	**$data['created_at']	:Creating time
+    **$data['created_by']	:Action User
+
+	**$tableHistory			:Name of the history table:='ams_back.system_histories'
+
+	*/
+    public function dBSaveHistory($data,$tableHistory){
+        DB::table($tableHistory)->insertGetId($data);
     }
 
 }

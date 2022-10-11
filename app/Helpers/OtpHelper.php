@@ -15,7 +15,7 @@ class OtpHelper {
                 return ['error'=>'OLD_OTP','messages'=>'old otp','otpInfo'=>$result];
         }
         else{
-            $itemNew=array();
+            $itemNew=[];
             $itemNew['user_id']=$user_id;
             $itemNew['reason']=$reason;
             $itemNew['otp']=rand(1000,999999);
@@ -46,7 +46,7 @@ class OtpHelper {
         return ['error'=>'','otpInfo'=>$result];
     }
     public static function updateOtp($otpInfo){
-        $itemNew=array();
+        $itemNew=[];
         $itemNew['last_used_at']=Carbon::now();
         DB::table(TABLE_USER_OTPS)->where('id',$otpInfo->id)->update($itemNew);
     }

@@ -10,10 +10,10 @@ define('TABLE_USER_OTPS', $db_main.'.user_otps');
 define('TABLE_MOBILE_SMS_HISTORIES', $db_main.'.system_history_mobile_sms');
 
 define('TABLE_TASKS', $db_main.'.system_tasks');
-define('TABLE_USER_HIDDEN_COLUMNS', $db_main.'.system_users_hidden_columns');
+define('TABLE_USER_HIDDEN_COLUMNS', $db_main.'.system_user_hidden_columns');
 
 
 define('TABLE_CONFIGURATIONS', $db_main.'.system_configurations');
-define('TABLE_HISTORIES', $db_main.'.system_histories');
+define('TABLE_SYSTEM_HISTORIES', $db_main.'.system_histories');
 
 
