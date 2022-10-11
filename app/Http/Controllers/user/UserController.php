@@ -9,6 +9,7 @@ use App\Helpers\UserHelper;
 use App\Http\Controllers\RootController;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 class UserController extends RootController
@@ -23,7 +24,7 @@ class UserController extends RootController
         }
         return response()->json($response);
     }
-    public function login(): JsonResponse
+    public function login(Request $request): JsonResponse
     {
         //input validation start
         $validation_rule = [];
@@ -31,8 +32,8 @@ class UserController extends RootController
         $validation_rule['password'] = ['required'];
         $validation_rule['otp'] = ['min:4','max:6'];
 
-        /** @noinspection PhpUndefinedClassInspection */
-        $itemNew =\Request::input('item');
+
+        $itemNew =$request->input('item');
 
         $this->validateInputKeys($itemNew,array_keys($validation_rule));
 
