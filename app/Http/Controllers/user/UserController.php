@@ -14,7 +14,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 class UserController extends RootController
 {
-
+    public $api_url='user';
+    public $permissions;
+    public function __construct()
+    {
+        parent::__construct();
+        $this->permissions=TaskHelper::getPermissions($this->api_url,$this->user);
+    }
     public function initialize(): JsonResponse
     {
         $response = [];
