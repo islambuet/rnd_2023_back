@@ -26,6 +26,13 @@ class UsersController extends RootController
             $response['error'] = '';
             $response['permissions'] = $this->permissions;
             $response['hidden_columns'] =TaskHelper::getHiddenColumns($this->api_url,$this->user);
+            if($this->user->user_group_id==ID_USERGROUP_SUPERADMIN)
+            {
+                $response['user_groups']= DB::table(TABLE_USER_GROUPS)->select('id','name')->orderBy('id', 'ASC')->get()->toArray();
+            }
+            else{
+                $response['user_groups']= DB::table(TABLE_USER_GROUPS)->select('id','name')->where('id','!=',ID_USERGROUP_SUPERADMIN)->orderBy('id', 'ASC')->get()->toArray();
+            }
             return response()->json($response);
         }
         else{
