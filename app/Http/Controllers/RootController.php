@@ -55,6 +55,24 @@ abstract class RootController extends Controller
             $this->sendErrorResponse(['error'=>'VALIDATION_FAILED','messages'=>$validator->errors()]);
         }
     }
+    public function checkSaveToken(){
+        /** @noinspection PhpUndefinedClassInspection */
+        $saveToken=\Request::input('save_token','');
+        if(!$saveToken){
+            $this->sendErrorResponse(['error'=>'VALIDATION_FAILED','messages' => __('Save Token Missing')]);
+        }
+        else if (!ctype_alnum( str_replace(['-','_'], '', $saveToken) ) ) {
+            $this->sendErrorResponse(['error'=>'VALIDATION_FAILED','messages' => __('Save Token Invalid')]);
+        }
+        else if($this->user->authTokenInfo->save_token==$saveToken){
+            $this->sendErrorResponse(['error'=>'DATA_ALREADY_SAVED','messages' => __('Data already Saved')]);
+        }
+    }
+    public function updateSaveToken(){
+        /** @noinspection PhpUndefinedClassInspection */
+        $saveToken=\Request::input('save_token','');
+        DB::table(TABLE_USER_AUTH_TOKENS)->where('id',$this->user->authTokenInfo->id)->update(['save_token'=>$saveToken]);
+    }
     /*
 	**$data['table_name']	:Save table name
 	**$data['table_id']	 	:Action id

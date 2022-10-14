@@ -18,6 +18,7 @@ class UserHelper {
                     if($user){
                         //AuthToken ='id_token'
                         $user->authToken=$authTokenInfo->id.'_'.$authTokenInfo->token;
+                        $user->authTokenInfo=$authTokenInfo;
                         //update AuthToken
                         DB::table(TABLE_USER_AUTH_TOKENS)->where('id',$authTokenInfo->id)->update(['last_used_at'=>$time,'expires_at'=>$time->copy()->addHours(ConfigurationHelper::getLoginSessionExpireHours())]);
                         $user->userGroupRole = TaskHelper::getUserGroupRole($user->user_group_id);

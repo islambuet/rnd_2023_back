@@ -17,6 +17,7 @@ class CreateUserAuthTokens extends Migration
             $table->increments('id');
             $table->integer('user_id');
             $table->string('token');
+            $table->string('save_token')->nullable();
             $table->text('device_info')->nullable();
             $table->timestamp('created_at');
             $table->timestamp('last_used_at')->nullable();

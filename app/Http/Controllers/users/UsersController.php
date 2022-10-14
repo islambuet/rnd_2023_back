@@ -89,6 +89,7 @@ class UsersController extends RootController
     }
     public function saveItem(Request $request): JsonResponse{
         $itemId = $request->input('id',0);
+        $this->checkSaveToken();
         if($itemId>0){
             return  $this->saveOldItem($request,$itemId);
         }
@@ -100,6 +101,7 @@ class UsersController extends RootController
         if ($this->permissions->action_1 != 1){
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have add access')]);
         }
+        $this->updateSaveToken();
 
         return response()->json(['error'=>'ACCESS_DENIED','messages'=>$request->input('item')]);
     }
