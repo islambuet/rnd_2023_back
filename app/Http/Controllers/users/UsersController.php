@@ -87,5 +87,23 @@ class UsersController extends RootController
             return response()->json(['error'=>'ACCESS_DENIED','messages'=>$this->permissions]);
         }
     }
-}
+    public function saveItem(Request $request): JsonResponse{
+        $itemId = $request->input('id',0);
+        if($itemId>0){
+            return  $this->saveOldItem($request,$itemId);
+        }
+        else{
+            return  $this->saveNewItem($request);
+        }
+    }
+    private function saveNewItem(Request $request): JsonResponse{
+        if ($this->permissions->action_1 != 1){
+            return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have add access')]);
+        }
 
+        return response()->json(['error'=>'ACCESS_DENIED','messages'=>$request->input('item')]);
+    }
+    private function saveOldItem(Request $request,$itemId): JsonResponse{
+        return response()->json(['error'=>'ACCESS_DENIED','messages'=>$request->input('id')]);
+    }
+}
