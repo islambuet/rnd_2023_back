@@ -63,8 +63,6 @@ class ColumnsControlController extends RootController
         }
         catch (\Exception $ex)
         {
-            print_r($ex);
-            // ELSE rollback & throw exception
             DB::rollback();
             return response()->json(['error' => 'DB_SAVE_FAILED', 'messages'=>__('Failed to save.')]);
         }
