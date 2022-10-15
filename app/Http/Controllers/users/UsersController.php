@@ -58,6 +58,9 @@ class UsersController extends RootController
             $query->orderBy('users.id', 'DESC');
             $query->orderBy('users.ordering', 'ASC');
             $query->where('users.status','!=',SYSTEM_STATUS_DELETE);//
+            if($perPage==-1){
+                $perPage=$query->count();
+            }
             $results=$query->paginate($perPage)->toArray();
             $response['items'] = $results;
             return response()->json($response);
