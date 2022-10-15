@@ -138,4 +138,53 @@ class UserController extends RootController
         }
         return response()->json(['error' => '', 'messages' => __('Logout success')]);
     }
+    public function ChangePassword(Request $request): JsonResponse{
+        $itemId=$this->user->id;
+        $this->checkSaveToken();
+
+        $validation_rule=[];
+        $validation_rule['password_old']=['required'];
+        $validation_rule['password_new']=['required','min:4'];
+
+        $itemNew =$request->input('item');
+        $itemOld =[];
+
+        $this->validateInputKeys($itemNew,array_keys($validation_rule));
+        $this->validateInputValues($itemNew, $validation_rule);
+        if($itemNew['password_old']==$itemNew['password_new']){
+            return response()->json(['error'=>'VALIDATION_FAILED','messages'=>__('Old and New password are same')]);
+        }
+        if(!(Hash::check($itemNew['password_old'],$this->user->password))){
+            return response()->json(['error'=>'VALIDATION_FAILED','messages'=>__('Old password is wrong')]);
+        }
+
+        DB::beginTransaction();
+        try{
+            $time=Carbon::now();
+            $dataHistory=[];
+            $dataHistory['table_name']=TABLE_USER_HIDDEN_COLUMNS;
+            $dataHistory['controller']=(new \ReflectionClass(__CLASS__))->getShortName();
+            $dataHistory['method']=__FUNCTION__;
+
+            $newPasswordHash=Hash::make($itemNew['password_new']);
+            DB::table(TABLE_USERS)->where('id',$itemId)->update(['updated_by'=>$this->user->id,'updated_at'=>$time,'password'=>$newPasswordHash]);
+            $dataHistory['table_id']=$itemId;
+            $dataHistory['action']=DB_ACTION_EDIT;
+
+
+            $dataHistory['data_old']=json_encode(['password'=>$this->user->password]);
+            $dataHistory['data_new']=json_encode(['password'=>$newPasswordHash]);
+            $dataHistory['created_at']=$time;
+            $dataHistory['created_by']=$this->user->id;
+            $this->dBSaveHistory($dataHistory,TABLE_SYSTEM_HISTORIES);
+            DB::table(TABLE_USER_AUTH_TOKENS)->where('user_id',$itemId)->where('expires_at','>',$time)->update(['expires_at'=>$time]);
+            $this->updateSaveToken();
+            DB::commit();
+
+            return response()->json(['error' => '']);
+        } catch (\Exception $ex) {
+            DB::rollback();
+            return response()->json(['error' => 'DB_SAVE_FAILED', 'messages'=>__('Failed to save.')]);
+        }
+    }
 }

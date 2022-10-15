@@ -225,7 +225,6 @@ class UsersController extends RootController
 
             return response()->json(['error' => '','messages' =>'User ('.$newId.')'.($itemId>0?'Updated':'Created').')  Successfully']);
         } catch (\Exception $ex) {
-            print_r($ex);
             DB::rollback();
             return response()->json(['error' => 'DB_SAVE_FAILED', 'messages'=>__('Failed to save.')]);
         }

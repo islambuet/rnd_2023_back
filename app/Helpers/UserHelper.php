@@ -86,10 +86,8 @@ class UserHelper {
             DB::commit();
         }
         catch (\Exception $ex) {
-            print_r($ex);
-            // ELSE rollback & throw exception
             DB::rollback();
-            return response()->json(['error' => 'DB_SAVE_FAILED', 'errorMessage'=>__('response.DB_SAVE_FAILED')],408);
+            return response()->json(['error' => 'DB_SAVE_FAILED', 'messages'=>__('Failed to save.')]);
         }
         //AuthToken ='id_token'
         return $id.'_'.$authToken;
