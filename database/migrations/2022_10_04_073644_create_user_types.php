@@ -16,7 +16,7 @@ class CreateUserTypes extends Migration
         Schema::create(TABLE_USER_TYPES, function (Blueprint $table) {
             $table->increments('id');
             $table->string('name', 100);
-            $table->string('prefix', 20);
+            $table->string('prefix', 20)->nullable();
             $table->integer('ordering')->default(99);
             $table->enum('status', [SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE, SYSTEM_STATUS_DELETE])->default(SYSTEM_STATUS_ACTIVE)->comment(SYSTEM_STATUS_ACTIVE.','. SYSTEM_STATUS_INACTIVE.','.SYSTEM_STATUS_DELETE);
             $table->integer('created_by');
