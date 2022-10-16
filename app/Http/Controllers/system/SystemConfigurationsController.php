@@ -26,7 +26,7 @@ class SystemConfigurationsController extends RootController
     public function initialize(): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
-            return response()->json(['error'=>'','permissions'=>$this->permissions]);
+            return response()->json(['error'=>'','permissions'=>$this->permissions,'hidden_columns'=>TaskHelper::getHiddenColumns($this->api_url,$this->user)]);
         } else {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
         }
