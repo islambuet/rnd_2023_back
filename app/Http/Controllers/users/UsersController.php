@@ -190,7 +190,7 @@ class UsersController extends RootController
         try{
             $time=Carbon::now();
             $dataHistory=[];
-            $dataHistory['table_name']=TABLE_USER_HIDDEN_COLUMNS;
+            $dataHistory['table_name']=TABLE_USERS;
             $dataHistory['controller']=(new \ReflectionClass(__CLASS__))->getShortName();
             $dataHistory['method']=__FUNCTION__;
             $newId=$itemId;
