@@ -126,7 +126,7 @@ class UserController extends RootController
             $apiUser->$key=$user->$key;
         }
         $apiUser->infos = (object)($user->infos ? json_decode($user->infos, true) :  []);
-        $apiUser->profile_picture_url = property_exists($apiUser->infos,'profile_picture')?ConfigurationHelper::getUploadedImageBaseurl().$apiUser->infos->profile_picture:'';
+        $apiUser->profile_picture = property_exists($apiUser->infos,'profile_picture')?$apiUser->infos->profile_picture:'';
         $apiUser->tasks=TaskHelper::getUserGroupTasks($user->userGroupRole);
         return $apiUser;
     }
@@ -178,6 +178,42 @@ class UserController extends RootController
             $dataHistory['created_by']=$this->user->id;
             $this->dBSaveHistory($dataHistory,TABLE_SYSTEM_HISTORIES);
             DB::table(TABLE_USER_AUTH_TOKENS)->where('user_id',$itemId)->where('expires_at','>',$time)->update(['expires_at'=>$time]);
+            $this->updateSaveToken();
+            DB::commit();
+
+            return response()->json(['error' => '']);
+        } catch (\Exception $ex) {
+            DB::rollback();
+            return response()->json(['error' => 'DB_SAVE_FAILED', 'messages'=>__('Failed to save.')]);
+        }
+    }
+    public function profilePicture(Request $request): JsonResponse{
+
+        $itemId=$this->user->id;
+        $this->checkSaveToken();
+        $infos = ($this->user->infos ? json_decode($this->user->infos, true) :  []);
+        $itemOld['infos']['profile_picture']=array_key_exists('profile_picture',$infos)?$infos['profile_picture']:'';
+
+        $inputData =$request->input('item',[]);
+
+        $infos['profile_picture']=array_key_exists('profile_picture',$inputData)?$inputData['profile_picture']:'';
+        DB::beginTransaction();
+        try{
+            $time=Carbon::now();
+            $dataHistory=[];
+            $dataHistory['table_name']=TABLE_USER_HIDDEN_COLUMNS;
+            $dataHistory['controller']=(new \ReflectionClass(__CLASS__))->getShortName();
+            $dataHistory['method']=__FUNCTION__;
+
+            DB::table(TABLE_USERS)->where('id',$itemId)->update(['updated_by'=>$this->user->id,'updated_at'=>$time,'infos'=>json_encode($infos)]);
+            $dataHistory['table_id']=$itemId;
+            $dataHistory['action']=DB_ACTION_EDIT;
+
+            $dataHistory['data_old']=json_encode($itemOld);
+            $dataHistory['data_new']=json_encode(['infos'=>['profile_picture'=>$infos['profile_picture']]]);
+            $dataHistory['created_at']=$time;
+            $dataHistory['created_by']=$this->user->id;
+            $this->dBSaveHistory($dataHistory,TABLE_SYSTEM_HISTORIES);
             $this->updateSaveToken();
             DB::commit();
 
