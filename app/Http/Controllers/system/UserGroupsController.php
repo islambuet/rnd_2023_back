@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 
-class UserTypesController extends RootController
+class UserGroupsController extends RootController
 {
-    public $api_url = 'system/user-types';
+    public $api_url = 'system/user-groups';
     public $permissions;
 
     public function __construct()
@@ -36,7 +36,7 @@ class UserTypesController extends RootController
     {
         if ($this->permissions->action_0 == 1) {
             $perPage = $request->input('perPage', 50);
-            $query=DB::table(TABLE_USER_TYPES);
+            $query=DB::table(TABLE_USER_GROUPS);
             $query->orderBy('id', 'DESC');
             $query->orderBy('ordering', 'ASC');
             $query->where('status', '!=', SYSTEM_STATUS_DELETE);//
@@ -53,7 +53,7 @@ class UserTypesController extends RootController
     public function getItem(Request $request, $itemId): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
-            $result = DB::table(TABLE_USER_TYPES)->find($itemId);
+            $result = DB::table(TABLE_USER_GROUPS)->find($itemId);
             if (!$result) {
                 return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid Id ' . $itemId)]);
             }
@@ -92,7 +92,7 @@ class UserTypesController extends RootController
 
         //edit change checking
         if ($itemId > 0) {
-            $result = DB::table(TABLE_USER_TYPES)->select(array_keys($validation_rule))->find($itemId);
+            $result = DB::table(TABLE_USER_GROUPS)->select(array_keys($validation_rule))->find($itemId);
             if (!$result) {
                 return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid Id ' . $itemId)]);
             }
@@ -122,20 +122,20 @@ class UserTypesController extends RootController
         try {
             $time = Carbon::now();
             $dataHistory = [];
-            $dataHistory['table_name'] = TABLE_USER_TYPES;
+            $dataHistory['table_name'] = TABLE_USER_GROUPS;
             $dataHistory['controller'] = (new \ReflectionClass(__CLASS__))->getShortName();
             $dataHistory['method'] = __FUNCTION__;
             $newId = $itemId;
             if ($itemId > 0) {
                 $itemNew['updated_by'] = $this->user->id;
                 $itemNew['updated_at'] = $time;
-                DB::table(TABLE_USER_TYPES)->where('id', $itemId)->update($itemNew);
+                DB::table(TABLE_USER_GROUPS)->where('id', $itemId)->update($itemNew);
                 $dataHistory['table_id'] = $itemId;
                 $dataHistory['action'] = DB_ACTION_EDIT;
             } else {
                 $itemNew['created_by'] = $this->user->id;
                 $itemNew['created_at'] = $time;
-                $newId = DB::table(TABLE_USER_TYPES)->insertGetId($itemNew);
+                $newId = DB::table(TABLE_USER_GROUPS)->insertGetId($itemNew);
                 $dataHistory['table_id'] = $newId;
                 $dataHistory['action'] = DB_ACTION_ADD;
             }

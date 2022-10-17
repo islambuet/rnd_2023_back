@@ -35,7 +35,7 @@ class SystemConfigurationsController extends RootController
     public function getItems(Request $request): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
-            $perPage = $request->input('perPage', 2);
+            $perPage = $request->input('perPage', 50);
             $query=DB::table(TABLE_CONFIGURATIONS);
             $query->orderBy('id', 'DESC');
             $query->where('status', '!=', SYSTEM_STATUS_DELETE);//
