@@ -35,15 +35,7 @@ class ModuleTasksController extends RootController
     public function getItems(Request $request): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
-            $perPage = $request->input('perPage', 2);
-            $query=DB::table(TABLE_TASKS);
-            $query->orderBy('id', 'DESC');
-            $query->where('status', '!=', SYSTEM_STATUS_DELETE);//
-            if ($perPage == -1) {
-                $perPage = $query->count();
-            }
-            $results = $query->paginate($perPage)->toArray();
-            return response()->json(['error'=>'','items'=>$results]);
+            return response()->json(['error'=>'','items'=>TaskHelper::getTasksTree()]);
         } else {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
         }
