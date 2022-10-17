@@ -71,16 +71,19 @@ class ModuleTasksController extends RootController
         $this->checkSaveToken();
         //Input validation start
         $validation_rule = [];
-        $validation_rule['purpose'] = ['required'];
-        $validation_rule['config_value'] = ['required'];
-        $validation_rule['description'] = ['nullable'];
+        $validation_rule['name'] = ['required'];
+        $validation_rule['type'] = [Rule::in(['MODULE','TASK'])];
+        $validation_rule['parent'] = ['nullable','numeric'];
+        $validation_rule['url'] = ['nullable'];
+        $validation_rule['ordering'] = ['numeric'];
         $validation_rule['status'] = [Rule::in([SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE])];
-
         $itemNew = $request->input('item');
         $itemOld = [];
 
         $this->validateInputKeys($itemNew, array_keys($validation_rule));
-
+        if(!$itemNew['parent']){
+            $itemNew['parent']=0;
+        }
         //edit change checking
         if ($itemId > 0) {
             $result = DB::table(TABLE_TASKS)->select(array_keys($validation_rule))->find($itemId);
