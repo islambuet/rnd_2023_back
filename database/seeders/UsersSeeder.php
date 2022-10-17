@@ -29,24 +29,13 @@ class UsersSeeder extends Seeder
                 'created_at'=>Carbon::now()
             ],
             [
-                'username' => 'admin',
+                'username' => '0026',
                 'password' => Hash::make('12345678'),
                 'user_group_id' => 2,
                 'user_type_id' => 1,
-                'name' => 'Shaiful Islam2',
-                'email' => 'shaiful@shaiful.me',
-                'mobile_no' => '01912097849',
-                'created_by' => 1,
-                'created_at'=>Carbon::now()
-            ],
-            [
-                'username' => '0500456',
-                'password' => Hash::make('12345678'),
-                'user_group_id' => 2,
-                'user_type_id' => 1,
-                'name' => 'Mahmud hasan',
-                'email' => 'info@shaiful.me',
-                'mobile_no' => '01912097849',
+                'name' => 'Abidur Rahman',
+                'email' => 'hoit@malikseeds.com',
+                'mobile_no' => '01713090961',
                 'created_by' => 1,
                 'created_at'=>Carbon::now()
             ],
