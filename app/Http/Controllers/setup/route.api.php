@@ -13,7 +13,7 @@ Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
 });
 
 $url='setup/principals';
-$controllerClass= Controllers\system\PrincipalsController::class;
+$controllerClass= Controllers\setup\PrincipalsController::class;
 /** @noinspection DuplicatedCode */
 Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
     Route::match(['GET','POST'],$url.'/initialize', [$controllerClass, 'initialize']);

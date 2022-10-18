@@ -41,6 +41,9 @@ class PrincipalsController extends RootController
             $query->where('status', '!=', SYSTEM_STATUS_DELETE);//
             if ($perPage == -1) {
                 $perPage = $query->count();
+                if($perPage<1){
+                    $perPage=50;
+                }
             }
             $results = $query->paginate($perPage)->toArray();
             return response()->json(['error'=>'','items'=>$results]);
