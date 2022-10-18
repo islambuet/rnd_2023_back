@@ -14,7 +14,7 @@ use Illuminate\Validation\Rule;
 
 class PrincipalsController extends RootController
 {
-    public $api_url = 'system/configurations';
+    public $api_url = 'setup/principals';
     public $permissions;
 
     public function __construct()
