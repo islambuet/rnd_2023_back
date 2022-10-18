@@ -4,8 +4,7 @@ namespace App\Helpers;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 class MobileSmsHelper {
-    //public static $API_URL='http://bangladeshsms.com/smsapi';
-    public static $API_URL='https://shaiful.me1';
+    public static $API_URL='http://bangladeshsms.com/smsapi';
     public static $API_SENDER_ID_MALIK_SEEDS='Malik Seeds';
     //$type= text for normal SMS/unicode for Bangla SMS
 

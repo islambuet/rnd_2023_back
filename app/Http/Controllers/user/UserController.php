@@ -89,9 +89,12 @@ class UserController extends RootController
                         if(!ConfigurationHelper::getMobileSmsApiToken()){
                             return response()->json(['error' => 'SMS_TOKEN_NOT_SET', 'messages' => 'SMS system is not set']);
                         }
-                        $otpInfo=OtpHelper::setOtp($user->id)['otpInfo'];
-                        MobileSmsHelper::send_sms(MobileSmsHelper::$API_SENDER_ID_MALIK_SEEDS,$user->mobile_no,'Your verification code for RND login: '.$otpInfo->otp,'text');
-                        return response()->json(['error' => 'VERIFY_MOBILE', 'messages' => 'Verify your mobile','otp'=>$otpInfo->otp^111111]);
+                        $otpResponse=OtpHelper::setOtp($user->id);
+                        if(!$otpResponse['error']){
+                            MobileSmsHelper::send_sms(MobileSmsHelper::$API_SENDER_ID_MALIK_SEEDS,$user->mobile_no,'Verification code for RND login: '.$otpResponse['otpInfo']->otp,'text');
+                        }
+
+                        return response()->json(['error' => 'VERIFY_MOBILE', 'messages' => $otpResponse['messages'],'otp'=>$otpResponse['otpInfo']->otp^111111]);
                     }
                     else{
                         //user
