@@ -21,12 +21,17 @@ class UserGroupsController extends RootController
     {
         parent::__construct();
         $this->permissions = TaskHelper::getPermissions($this->api_url, $this->user);
+        if($this->user && ($this->user->user_group_id ==ID_USERGROUP_SUPERADMIN))
+        {
+            $this->permissions->action_0=1;
+            $this->permissions->action_2=1;
+        }
     }
 
     public function initialize(): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
-            return response()->json(['error'=>'','permissions'=>$this->permissions,'hidden_columns'=>TaskHelper::getHiddenColumns($this->api_url,$this->user)]);
+            return response()->json(['error'=>'','permissions'=>$this->permissions,'hidden_columns'=>TaskHelper::getHiddenColumns($this->api_url,$this->user),'tasks'=>TaskHelper::getTasksTree()]);
         } else {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
         }
@@ -155,5 +160,68 @@ class UserGroupsController extends RootController
             return response()->json(['error' => 'DB_SAVE_FAILED', 'messages' => __('Failed to save.')]);
         }
     }
-}
+    public function saveRole(Request $request,$itemId): JsonResponse{
+        if ($this->permissions->action_2 != 1) {
+            return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have add access')]);
+        }
+        $query=DB::table(TABLE_USER_GROUPS);
+        for($i=0;$i<TaskHelper::$MAX_MODULE_ACTIONS;$i++) {
+            $query->addselect('action_'.$i);
+        }
+        $result = $query->find($itemId);
+        if (!$result) {
+            return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid UserGroup ' . $itemId)]);
+        }
+        $itemNew=$itemOld=(array)$result;
+        $tasks=$request->input('tasks',(object)[]);
+        foreach ($tasks as $task){
+            if(isset($task['actions'])){
+                $task['actions'][0]=1;
+            }
+            else{
+                $task['actions'][0]=0;
+            }
+            for($i=0;$i<TaskHelper::$MAX_MODULE_ACTIONS;$i++)
+            {
+                $itemNew['action_'.$i]=str_replace(','.$task['task_id'].',',',' ,$itemNew['action_'.$i]);//remove the task from action;
+                if(isset($task['actions'][$i])){
+                    if(($task['actions'][$i])==1)
+                    {
+                        $itemNew['action_'.$i].=$task['task_id'].',';//add the task into action
+                    }
+                }
+            }
+        }
+        DB::beginTransaction();
+        try {
+            $time = Carbon::now();
+            $dataHistory = [];
+            $dataHistory['table_name'] = TABLE_USER_GROUPS;
+            $dataHistory['controller'] = (new \ReflectionClass(__CLASS__))->getShortName();
+            $dataHistory['method'] = __FUNCTION__;
 
+            $itemNew['updated_by'] = $this->user->id;
+            $itemNew['updated_at'] = $time;
+            DB::table(TABLE_USER_GROUPS)->where('id', $itemId)->update((array)$itemNew);
+            $dataHistory['table_id'] = $itemId;
+            $dataHistory['action'] = DB_ACTION_EDIT;
+
+            unset($itemNew['updated_by'],$itemNew['created_by'],$itemNew['created_at'],$itemNew['updated_at']);
+
+            $dataHistory['data_old'] = json_encode($itemOld);
+            $dataHistory['data_new'] = json_encode($itemNew);
+            $dataHistory['created_at'] = $time;
+            $dataHistory['created_by'] = $this->user->id;
+
+            $this->dBSaveHistory($dataHistory, TABLE_SYSTEM_HISTORIES);
+
+            DB::commit();
+
+            return response()->json(['error' => '', 'messages' => 'User Role (' . $itemId . ') Updated Successfully']);
+        } catch (\Exception $ex) {
+            DB::rollback();
+            return response()->json(['error' => 'DB_SAVE_FAILED', 'messages' => __('Failed to save.')]);
+        }
+
+    }
+}
