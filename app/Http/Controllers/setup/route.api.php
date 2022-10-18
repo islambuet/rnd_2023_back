@@ -3,7 +3,7 @@
 use App\Http\Controllers as Controllers;
 use Illuminate\Support\Facades\Route;
 $url='setup/designations';
-$controllerClass= Controllers\system\ModuleTasksController::class;
+$controllerClass= Controllers\setup\ModuleTasksController::class;
 /** @noinspection DuplicatedCode */
 Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
     Route::match(['GET','POST'],$url.'/initialize', [$controllerClass, 'initialize']);
@@ -23,7 +23,7 @@ Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
 });
 
 $url='setup/competitors';
-$controllerClass= Controllers\system\UserTypesController::class;
+$controllerClass= Controllers\setup\CompetitorsController::class;
 /** @noinspection DuplicatedCode */
 Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
     Route::match(['GET','POST'],$url.'/initialize', [$controllerClass, 'initialize']);
@@ -33,7 +33,7 @@ Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
 });
 
 $url='setup/seasons';
-$controllerClass= Controllers\system\UserTypesController::class;
+$controllerClass= Controllers\setup\UserTypesController::class;
 /** @noinspection DuplicatedCode */
 Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
     Route::match(['GET','POST'],$url.'/initialize', [$controllerClass, 'initialize']);
