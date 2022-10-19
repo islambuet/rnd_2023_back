@@ -83,10 +83,9 @@ class SeasonsController extends RootController
         //Input validation start
         $validation_rule = [];
         $validation_rule['name'] = ['required'];
-        $validation_rule['season_start_date']=['nullable','date'];
-        $validation_rule['expected_sowing_start']=['nullable','date'];
-        $validation_rule['expected_sowing_end']=['nullable','date'];
-        $validation_rule['estimated_delivery_date']=['nullable','date'];
+        $validation_rule['expected_delivery_at']=['nullable','date'];
+        $validation_rule['expected_sowing_at']=['nullable','date'];
+        $validation_rule['expected_reporting_at']=['nullable','date'];
         $validation_rule['ordering']=['numeric'];
         $validation_rule['status'] = [Rule::in([SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE])];
 
@@ -104,7 +103,7 @@ class SeasonsController extends RootController
             $itemOld = (array)$result;
             foreach ($itemOld as $key => $oldValue) {
                 if (array_key_exists($key, $itemNew)) {
-                    if(in_array($key,['season_start_date','expected_sowing_start','expected_sowing_end','estimated_delivery_date']))
+                    if(in_array($key,['expected_delivery_at','expected_sowing_at','expected_reporting_at']))
                     {
                         if($oldValue){
                             $oldValue=substr($oldValue,0,10);//getting only date part
