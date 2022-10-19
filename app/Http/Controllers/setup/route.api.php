@@ -32,8 +32,8 @@ Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
     Route::post($url.'/save-item', [$controllerClass, 'saveItem']);
 });
 
-$url='setup/seasons';
-$controllerClass= Controllers\setup\SeasonsController::class;
+$url='setup/crops';
+$controllerClass= Controllers\setup\CropsController::class;
 /** @noinspection DuplicatedCode */
 Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
     Route::match(['GET','POST'],$url.'/initialize', [$controllerClass, 'initialize']);
