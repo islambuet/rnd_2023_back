@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\DB;
 class TaskHelper
 {
     public static $MAX_MODULE_ACTIONS = 9;
+    public static $TRAIL_FORM_SETUP_ID = 17;
 
     public static function getUserGroupRole($user_group_id): object
     {
@@ -39,6 +40,12 @@ class TaskHelper
     }
     public static function getUserGroupTasks($userGroupRole): array
     {
+        $crops=DB::table(TABLE_CROPS)
+            ->select('id', 'name','ordering','status')
+            ->orderBy('ordering', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->where('status', SYSTEM_STATUS_ACTIVE)
+            ->get();
         $role = [];
         if (strlen($userGroupRole->action_0) > 1) {
             $role = explode(',', trim($userGroupRole->action_0, ','));
@@ -52,7 +59,25 @@ class TaskHelper
         foreach ($tasks as $task) {
             if ($task->type == 'TASK') {
                 if (in_array($task->id, $role)) {
-                    $children[$task->parent][$task->id] = $task;
+                    if($task->id==Self::$TRAIL_FORM_SETUP_ID){
+                        $task->type='MODULE';
+                        $children[$task->parent][$task->id] = $task;
+                        foreach ($crops as $crop){
+                            $subtask=(object)[
+                                'id'=>$task->id.'_'.$crop->id,
+                                'name'=>$crop->name,
+                                'type'=>'TASK',
+                                'parent'=>$task->id,
+                                'url'=>$task->url.'/'.$crop->id,
+                                'ordering'=>$crop->ordering,
+                                'status'=>$crop->status
+                            ];
+                            $children[$subtask->parent][$subtask->id] = $subtask;
+                        }
+                    }
+                    else{
+                        $children[$task->parent][$task->id] = $task;
+                    }
                 }
             }
             else {
