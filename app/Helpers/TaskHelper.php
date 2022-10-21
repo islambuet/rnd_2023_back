@@ -6,6 +6,7 @@ class TaskHelper
 {
     public static $MAX_MODULE_ACTIONS = 9;
     public static $TRAIL_FORM_SETUP_ID = 17;
+    public static $TRAIL_DATA_ID = 18;
 
     public static function getUserGroupRole($user_group_id): object
     {
@@ -46,6 +47,16 @@ class TaskHelper
             ->orderBy('id', 'ASC')
             ->where('status', SYSTEM_STATUS_ACTIVE)
             ->get();
+        $results=DB::table(TABLE_TRIAL_FORMS)
+            ->select('id', 'name','crop_id','ordering','status')
+            ->orderBy('ordering', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->where('status', SYSTEM_STATUS_ACTIVE)
+            ->get();
+        $forms=[];
+        foreach ($results as $result){
+            $forms[$result->crop_id][]=$result;
+        }
         $role = [];
         if (strlen($userGroupRole->action_0) > 1) {
             $role = explode(',', trim($userGroupRole->action_0, ','));
@@ -73,6 +84,37 @@ class TaskHelper
                                 'status'=>$crop->status
                             ];
                             $children[$subtask->parent][$subtask->id] = $subtask;
+                        }
+                    }
+                    else if($task->id==Self::$TRAIL_DATA_ID){
+                        $task->type='MODULE';
+                        $children[$task->parent][$task->id] = $task;
+                        foreach ($crops as $crop){
+                            $subModule=(object)[
+                                'id'=>$task->id.'_'.$crop->id,
+                                'name'=>$crop->name,
+                                'type'=>'MODULE',
+                                'parent'=>$task->id,
+                                'url'=>'',
+                                'ordering'=>$crop->ordering,
+                                'status'=>$crop->status
+                            ];
+                            $children[$subModule->parent][$subModule->id] = $subModule;
+                            if(isset($forms[$crop->id])){
+                                foreach ($forms[$crop->id] as $form){
+                                    $subtask=(object)[
+                                        'id'=>$subModule->id.'_'.$form->id,
+                                        'name'=>$form->name,
+                                        'type'=>'TASK',
+                                        'parent'=>$subModule->id,
+                                        'url'=>$task->url.'/'.$crop->id.'/'.$form->id,
+                                        'ordering'=>$form->ordering,
+                                        'status'=>$form->status
+                                    ];
+                                    $children[$subtask->parent][$subtask->id] = $subtask;
+                                }
+                            }
+
                         }
                     }
                     else{
