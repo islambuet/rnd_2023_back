@@ -179,7 +179,7 @@ class TaskHelper
         $tasks = DB::table(TABLE_TASKS)
             ->select('id', 'name', 'type', 'parent', 'url', 'ordering', 'status')
             ->orderBy('ordering', 'ASC')
-            ->where('status', SYSTEM_STATUS_ACTIVE)
+            ->where('status','!=', SYSTEM_STATUS_DELETE)
             ->get();
         $children = [];
         foreach ($tasks as $task) {
