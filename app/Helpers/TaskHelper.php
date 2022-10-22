@@ -39,6 +39,17 @@ class TaskHelper
         }
         return $permissions;
     }
+    public static function getAllPermissions($access){
+        $permissions = (object)[];
+        for ($i = 0; $i < self::$MAX_MODULE_ACTIONS; $i++) {
+            if ($access) {
+                $permissions->{'action_' . $i} = 1;
+            } else {
+                $permissions->{'action_' . $i} = 0;
+            }
+        }
+        return $permissions;
+    }
     public static function getUserGroupTasks($userGroupRole): array
     {
         $crops=DB::table(TABLE_CROPS)
