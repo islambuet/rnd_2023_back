@@ -71,7 +71,10 @@ class TrialFormsController extends RootController
         if ($this->permissions->action_0 == 1) {
             $result = DB::table(TABLE_TRIAL_FORMS)->find($formId);
             if (!$result) {
-                return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid Id ' . $formId)]);
+                return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid Form Id ' . $formId)]);
+            }
+            if ($result->crop_id !=$cropId) {
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => __('Invalid Crop Id ' . $cropId)]);
             }
             return response()->json(['error'=>'','item'=>$result]);
         } else {
@@ -111,9 +114,12 @@ class TrialFormsController extends RootController
         if ($itemId > 0) {
             $result = DB::table(TABLE_TRIAL_FORMS)->select(array_keys($validation_rule))->find($itemId);
             if (!$result) {
-                return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid Id ' . $itemId)]);
+                return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid Form Id ' . $itemId)]);
             }
             $itemOld = (array)$result;
+            if($itemNew['crop_id']!=$itemOld['crop_id']){
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => __('Invalid Crop Id ' . $cropId)]);
+            }
             foreach ($itemOld as $key => $oldValue) {
                 if (array_key_exists($key, $itemNew)) {
                     if ($oldValue == $itemNew[$key]) {
@@ -174,25 +180,17 @@ class TrialFormsController extends RootController
         }
     }
 
-    public function getItemInput(Request $request,$cropId, $formId,$inputId): JsonResponse
-    {
-        if ($this->permissions->action_0 == 1) {
-            $result = DB::table(TABLE_TRIAL_FORM_INPUTS)->find($inputId);
-            if (!$result) {
-                return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid input Id ' . $inputId)]);
-            }
-            if ($result->trial_form_id !=$formId) {
-                return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid Form Id ' . $formId)]);
-            }
-            return response()->json(['error'=>'','item'=>$result]);
-        } else {
-            return response()->json(['error' => 'ACCESS_DENIED', 'messages' => $this->permissions]);
-        }
-    }
     public function getItemsInput(Request $request, $cropId,$formId): JsonResponse
     {
-
         if ($this->permissions->action_0 == 1) {
+            $formInfo = DB::table(TABLE_TRIAL_FORMS)->find($formId);
+            if (!$formInfo) {
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => __('Invalid Form Id ' . $formId)]);
+            }
+            if ($formInfo->crop_id !=$cropId) {
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => __('Invalid Crop Id ' . $cropId)]);
+            }
+
             $perPage = $request->input('perPage', 50);
             $query=DB::table(TABLE_TRIAL_FORM_INPUTS);
             $query->where('trial_form_id', $formId);//
@@ -205,11 +203,36 @@ class TrialFormsController extends RootController
                 }
             }
             $results = $query->paginate($perPage)->toArray();
-            return response()->json(['error'=>'','items'=>$results]);
+            return response()->json(['error'=>'','items'=>$results,'formInfo'=>$formInfo]);
         } else {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
         }
     }
+    public function getItemInput(Request $request,$cropId, $formId,$inputId): JsonResponse
+    {
+        if ($this->permissions->action_0 == 1) {
+            $info = DB::table(TABLE_TRIAL_FORM_INPUTS)->find($inputId);
+            if (!$info) {
+                return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid input Id ' . $inputId)]);
+            }
+            if ($info->trial_form_id !=$formId) {
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => __('Invalid Form Id ' . $formId)]);
+            }
+            //validating form info
+            $formInfo = DB::table(TABLE_TRIAL_FORMS)->find($formId);
+            if (!$formInfo) {
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => __('Invalid Form Id ' . $formId)]);
+            }
+            if ($formInfo->crop_id !=$cropId) {
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => __('Invalid Crop Id ' . $cropId)]);
+            }
+
+            return response()->json(['error'=>'','item'=>$info]);
+        } else {
+            return response()->json(['error' => 'ACCESS_DENIED', 'messages' => $this->permissions]);
+        }
+    }
+
     public function saveItemInput(Request $request, $cropId,$formId): JsonResponse
     {
         $itemId = $request->input('id', 0);
