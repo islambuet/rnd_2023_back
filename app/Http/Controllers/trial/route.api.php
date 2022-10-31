@@ -16,3 +16,10 @@ Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
     Route::post($url.'/{cropId}/inputs/{formId}/save-item', [$controllerClass, 'saveItemInput']);
 });
 
+$url='trial/data';
+$controllerClass= Controllers\trial\TrialDataController::class;
+/** @noinspection DuplicatedCode */
+Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
+    Route::match(['GET','POST'],$url.'/{cropId}/{formId}/initialize', [$controllerClass, 'initialize']);
+});
+
