@@ -18,6 +18,7 @@ class CreateCrops extends Migration
             $table->string('name');
             $table->string('code', 5)->nullable();
             $table->enum('replica', [SYSTEM_STATUS_YES, SYSTEM_STATUS_NO])->default(SYSTEM_STATUS_YES)->comment(SYSTEM_STATUS_YES.','. SYSTEM_STATUS_NO);
+            $table->mediumInteger('initial_plants')->default(0);
             $table->integer('ordering')->default(9999);
             $table->enum('status', [SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE, SYSTEM_STATUS_DELETE])->default(SYSTEM_STATUS_ACTIVE)->comment(SYSTEM_STATUS_ACTIVE.','. SYSTEM_STATUS_INACTIVE.','.SYSTEM_STATUS_DELETE);
             $table->integer('created_by');
