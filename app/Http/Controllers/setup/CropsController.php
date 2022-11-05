@@ -85,6 +85,7 @@ class CropsController extends RootController
         $validation_rule['name'] = ['required'];
         $validation_rule['code'] = ['required'];
         $validation_rule['replica'] = [Rule::in([SYSTEM_STATUS_YES, SYSTEM_STATUS_NO])];
+        $validation_rule['initial_plants']=['numeric'];
         $validation_rule['ordering']=['numeric'];
         $validation_rule['status'] = [Rule::in([SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE])];
 
