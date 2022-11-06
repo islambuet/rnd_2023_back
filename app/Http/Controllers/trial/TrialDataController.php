@@ -39,7 +39,8 @@ class TrialDataController extends RootController
         if ($this->permissions->action_0 == 1) {
             $query=DB::table(TABLE_TRIAL_FORM_INPUTS);
             $query->where('trial_form_id', $formId);//
-            $query->orderBy('id', 'DESC');
+            $query->orderBy('ordering', 'ASC');
+            $query->orderBy('id', 'ASC');
             $query->where('status', SYSTEM_STATUS_ACTIVE);
             $itemsInput = $query->get();
             return response()->json(
