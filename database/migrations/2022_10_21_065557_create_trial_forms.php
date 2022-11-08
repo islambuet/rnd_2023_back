@@ -18,6 +18,7 @@ class CreateTrialForms extends Migration
             $table->string('name');
             $table->smallInteger('crop_id');
             $table->smallInteger('entry_count')->default(1);
+            $table->smallInteger('entry_interval')->default(0);
             $table->integer('ordering')->default(9999);
             $table->enum('status', [SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE, SYSTEM_STATUS_DELETE])->default(SYSTEM_STATUS_ACTIVE)->comment(SYSTEM_STATUS_ACTIVE.','. SYSTEM_STATUS_INACTIVE.','.SYSTEM_STATUS_DELETE);
             $table->integer('created_by');

@@ -101,6 +101,7 @@ class TrialFormsController extends RootController
         $validation_rule['name'] = ['required'];
         $validation_rule['crop_id'] = ['required'];
         $validation_rule['entry_count'] = ['required','numeric'];
+        $validation_rule['entry_interval'] = ['numeric'];
         $validation_rule['ordering']=['numeric'];
         $validation_rule['status'] = [Rule::in([SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE])];
 
