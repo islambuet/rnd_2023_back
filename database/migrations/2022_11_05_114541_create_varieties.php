@@ -16,8 +16,8 @@ class CreateVarieties extends Migration
         Schema::create(TABLE_VARIETIES, function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
-            $table->smallInteger('crop_id');
-            $table->string('crop_type_ids')->default(',');
+            $table->smallInteger('crop_type_id');
+            $table->string('crop_feature_ids')->default(',');
             $table->string('whose', 10)->default('ARM')->comment('ARM,Principal,Competitor');
             $table->integer('principal_id')->nullable();
             $table->integer('competitor_id')->nullable();
