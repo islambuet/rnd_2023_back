@@ -36,6 +36,11 @@ class UsersController extends RootController
             else{
                 $response['user_groups']= DB::table(TABLE_USER_GROUPS)->select('id','name')->where('id','!=',ID_USERGROUP_SUPERADMIN)->orderBy('id', 'ASC')->get()->toArray();
             }
+            $response['trial_stations']= DB::table(TABLE_TRIAL_STATIONS)
+                ->select('id', 'name')
+                ->orderBy('ordering', 'ASC')
+                ->where('status', SYSTEM_STATUS_ACTIVE)
+                ->get();
             return response()->json($response);
         }
         else{
@@ -74,7 +79,7 @@ class UsersController extends RootController
         if ($this->permissions->action_0 == 1){
             /** @noinspection DuplicatedCode */
             $query=DB::table(TABLE_USERS.' as users');
-            $query->select('users.id','users.employee_id','users.username','users.user_group_id','users.name','users.email','users.mobile_no',
+            $query->select('users.id','users.employee_id','users.username','users.user_group_id','users.trial_station_ids','users.name','users.email','users.mobile_no',
                 'users.ordering','users.status','users.max_logged_browser','users.mobile_authentication_off_end','users.created_at');
             $query->join(TABLE_USER_GROUPS.' as user_groups', 'user_groups.id', '=', 'users.user_group_id');
             $query->addSelect('user_groups.name as user_group_name');
@@ -118,6 +123,7 @@ class UsersController extends RootController
         $validation_rule['username'] = ['required', 'alpha_dash'];
         $validation_rule['password'] = ['required','min:4'];
         $validation_rule['user_group_id'] = ['required'];
+        $validation_rule['trial_station_ids'] = ['required'];
         $validation_rule['name'] = ['required'];
         $validation_rule['email'] = ['required','email'];
         $validation_rule['mobile_no'] = ['required'];
@@ -128,6 +134,12 @@ class UsersController extends RootController
         $validation_rule['max_logged_browser']=['numeric'];
 
         $itemNew =$request->input('item');
+        if(isset($itemNew['trial_station_ids'])){
+            $itemNew['trial_station_ids']=','.implode(',',$itemNew['trial_station_ids']).',';
+        }
+        else{
+            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => 'Trail Station Required']);
+        }
         $itemOld =[];
 
         $this->validateInputKeys($itemNew,array_keys($validation_rule));

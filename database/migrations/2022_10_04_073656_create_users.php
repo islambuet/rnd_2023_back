@@ -20,6 +20,7 @@ class CreateUsers extends Migration
             $table->string('password');
             $table->smallInteger('user_group_id')->default(3);
             $table->tinyInteger('user_type_id')->default(1);
+            $table->string('trial_station_ids')->default(',');
             $table->string('name');
             $table->string('email', 100)->nullable();
             $table->string('mobile_no')->nullable();
