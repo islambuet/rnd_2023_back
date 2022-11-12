@@ -17,4 +17,5 @@ define('TABLE_TRIAL_FORM_INPUTS', $db_main.'.trial_form_inputs');
 define('TABLE_TRIAL_DATA', $db_main.'.trial_data');
 define('TABLE_TRIAL_REPORTS', $db_main.'.trial_reports');
 define('TABLE_TRIAL_STATIONS', $db_main.'.trial_stations');
+define('TABLE_DISEASES', $db_main.'.diseases');
 

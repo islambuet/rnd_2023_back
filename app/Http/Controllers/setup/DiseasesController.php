@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 
-class TrialStationController extends RootController
+class DiseasesController extends RootController
 {
-    public $api_url = 'setup/crops';
+    public $api_url = 'setup/crop-types';
     public $permissions;
 
     public function __construct()
@@ -26,7 +26,12 @@ class TrialStationController extends RootController
     public function initialize(): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
-            return response()->json(['error'=>'','permissions'=>$this->permissions,'hidden_columns'=>TaskHelper::getHiddenColumns($this->api_url,$this->user)]);
+            $crops = DB::table(TABLE_CROPS)
+                ->select('id', 'name')
+                ->orderBy('ordering', 'ASC')
+                ->where('status', SYSTEM_STATUS_ACTIVE)
+                ->get();
+            return response()->json(['error'=>'','permissions'=>$this->permissions,'hidden_columns'=>TaskHelper::getHiddenColumns($this->api_url,$this->user),'crops'=>$crops]);
         } else {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
         }
@@ -36,9 +41,13 @@ class TrialStationController extends RootController
     {
         if ($this->permissions->action_0 == 1) {
             $perPage = $request->input('perPage', 50);
-            $query=DB::table(TABLE_TRIAL_STATIONS);
-            $query->orderBy('id', 'DESC');
-            $query->where('status', '!=', SYSTEM_STATUS_DELETE);//
+
+            $query=DB::table(TABLE_DISEASES.' as crop_types');
+            $query->select('crop_types.*');
+            $query->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id');
+            $query->addSelect('crops.name as crop_name');
+            $query->orderBy('crop_types.id', 'DESC');
+            $query->where('crop_types.status', '!=', SYSTEM_STATUS_DELETE);//
             if ($perPage == -1) {
                 $perPage = $query->count();
                 if($perPage<1){
@@ -55,7 +64,12 @@ class TrialStationController extends RootController
     public function getItem(Request $request, $itemId): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
-            $result = DB::table(TABLE_TRIAL_STATIONS)->find($itemId);
+            $query=DB::table(TABLE_DISEASES.' as crop_types');
+            $query->select('crop_types.*');
+            $query->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id');
+            $query->addSelect('crops.name as crop_name');
+            $query->where('crop_types.id','=',$itemId);
+            $result = $query->first();
             if (!$result) {
                 return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid Id ' . $itemId)]);
             }
@@ -83,6 +97,8 @@ class TrialStationController extends RootController
         //Input validation start
         $validation_rule = [];
         $validation_rule['name'] = ['required'];
+        $validation_rule['type'] = [Rule::in(['Disease','Pest'])];
+        $validation_rule['crop_id'] = ['required','numeric'];
         $validation_rule['ordering']=['numeric'];
         $validation_rule['status'] = [Rule::in([SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE])];
 
@@ -93,7 +109,7 @@ class TrialStationController extends RootController
 
         //edit change checking
         if ($itemId > 0) {
-            $result = DB::table(TABLE_TRIAL_STATIONS)->select(array_keys($validation_rule))->find($itemId);
+            $result = DB::table(TABLE_DISEASES)->select(array_keys($validation_rule))->find($itemId);
             if (!$result) {
                 return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid Id ' . $itemId)]);
             }
@@ -118,25 +134,26 @@ class TrialStationController extends RootController
             return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => 'Nothing was Changed']);
         }
         $this->validateInputValues($itemNew, $validation_rule);
+        //TODO validate crop_id
         //Input validation ends
         DB::beginTransaction();
         try {
             $time = Carbon::now();
             $dataHistory = [];
-            $dataHistory['table_name'] = TABLE_TRIAL_STATIONS;
+            $dataHistory['table_name'] = TABLE_DISEASES;
             $dataHistory['controller'] = (new \ReflectionClass(__CLASS__))->getShortName();
             $dataHistory['method'] = __FUNCTION__;
             $newId = $itemId;
             if ($itemId > 0) {
                 $itemNew['updated_by'] = $this->user->id;
                 $itemNew['updated_at'] = $time;
-                DB::table(TABLE_TRIAL_STATIONS)->where('id', $itemId)->update($itemNew);
+                DB::table(TABLE_DISEASES)->where('id', $itemId)->update($itemNew);
                 $dataHistory['table_id'] = $itemId;
                 $dataHistory['action'] = DB_ACTION_EDIT;
             } else {
                 $itemNew['created_by'] = $this->user->id;
                 $itemNew['created_at'] = $time;
-                $newId = DB::table(TABLE_TRIAL_STATIONS)->insertGetId($itemNew);
+                $newId = DB::table(TABLE_DISEASES)->insertGetId($itemNew);
                 $dataHistory['table_id'] = $newId;
                 $dataHistory['action'] = DB_ACTION_ADD;
             }
