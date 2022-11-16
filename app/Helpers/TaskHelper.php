@@ -7,6 +7,7 @@ class TaskHelper
     public static $MAX_MODULE_ACTIONS = 9;
     public static $TRAIL_FORM_SETUP_ID = 17;
     public static $TRAIL_DATA_ID = 18;
+    public static $VARIETY_SELECTION_ID = 23;
 
     public static function getUserGroupRole($user_group_id): object
     {
@@ -81,7 +82,7 @@ class TaskHelper
         foreach ($tasks as $task) {
             if ($task->type == 'TASK') {
                 if (in_array($task->id, $role)) {
-                    if($task->id==Self::$TRAIL_FORM_SETUP_ID){
+                    if(($task->id==Self::$TRAIL_FORM_SETUP_ID) ||($task->id==Self::$VARIETY_SELECTION_ID)){
                         $task->type='MODULE';
                         $children[$task->parent][$task->id] = $task;
                         foreach ($crops as $crop){
@@ -97,6 +98,7 @@ class TaskHelper
                             $children[$subtask->parent][$subtask->id] = $subtask;
                         }
                     }
+
                     else if($task->id==Self::$TRAIL_DATA_ID){
                         $task->type='MODULE';
                         $children[$task->parent][$task->id] = $task;
