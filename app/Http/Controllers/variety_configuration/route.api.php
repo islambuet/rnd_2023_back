@@ -8,5 +8,6 @@ $controllerClass= Controllers\variety_configuration\VarietySelectionController::
 Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
     Route::match(['GET','POST'],$url.'/{cropId}/{year}/initialize', [$controllerClass, 'initialize']);
     Route::match(['GET','POST'],$url.'/{cropId}/{year}/get-items', [$controllerClass, 'getItems']);
-    Route::match(['GET','POST'],$url.'/{cropId}/{year}/get-item/{itemId}', [$controllerClass, 'getItem']);
+//    Route::match(['GET','POST'],$url.'/{cropId}/{year}/get-item/{varietyId}', [$controllerClass, 'getItem']);
+    Route::post($url.'/{cropId}/{year}/save-item', [$controllerClass, 'saveItem']);
 });

@@ -126,7 +126,7 @@ class VarietiesController extends RootController
         //permission checking start
         if ($itemId > 0) {
             if ($this->permissions->action_2 != 1) {
-                return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have add access')]);
+                return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have Edit access')]);
             }
         } else {
             if ($this->permissions->action_1 != 1) {
@@ -201,7 +201,7 @@ class VarietiesController extends RootController
         //TODO validate crop_id
         //Input validation ends
         DB::beginTransaction();
-//        try {
+        try {
             $time = Carbon::now();
             $dataHistory = [];
             $dataHistory['table_name'] = TABLE_VARIETIES;
@@ -233,11 +233,11 @@ class VarietiesController extends RootController
             DB::commit();
 
             return response()->json(['error' => '', 'messages' => 'Data (' . $newId . ')' . ($itemId > 0 ? 'Updated' : 'Created') . ')  Successfully']);
-//        }
-//        catch (\Exception $ex) {
-//            DB::rollback();
-//            return response()->json(['error' => 'DB_SAVE_FAILED', 'messages' => __('Failed to save.')]);
-//        }
+        }
+        catch (\Exception $ex) {
+            DB::rollback();
+            return response()->json(['error' => 'DB_SAVE_FAILED', 'messages' => __('Failed to save.')]);
+        }
     }
 }
 

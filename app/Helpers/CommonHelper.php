@@ -15,10 +15,10 @@ class CommonHelper
                     $code.='-ARM';
                 }
                 else if($variety->whose=='Principal'){
-                    $code.='-'.$variety->principal_info->code;
+                    $code.='-P'.$variety->principal_info->code;
                 }
                 else if($variety->whose=='Competitor'){
-                    $code.='-'.$variety->competitor_info->code;
+                    $code.='-C'.$variety->competitor_info->code;
                 }
                 else{
                     $code.='-XXX';
