@@ -5,6 +5,7 @@ use App\Http\Controllers\RootController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+use App\Helpers\CommonHelper;
 use App\Helpers\TaskHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -53,21 +54,42 @@ class VarietySelectionController extends RootController
     public function getItems(Request $request, $cropId, $year): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
+            $results=DB::table(TABLE_PRINCIPALS)->get();
+            $principals=[];
+            foreach ($results as $result){
+                $principals[$result->id]=$result;
+            }
+            $results=DB::table(TABLE_COMPETITORS)->get();
+            $competitors=[];
+            foreach ($results as $result){
+                $competitors[$result->id]=$result;
+            }
+
             $varieties=DB::table(TABLE_VARIETIES.' as varieties')
                 ->select('varieties.*')
                 ->join(TABLE_CROP_TYPES.' as crop_types', 'crop_types.id', '=', 'varieties.crop_type_id')
                 ->addSelect('crop_types.name as crop_type_name','crop_types.code as crop_type_code')
-                ->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id')
-                ->addSelect('crops.name as crop_name','crops.code as crop_code')
-                ->addSelect('crop_types.name as crop_type_name','crop_types.code as crop_type_code')
+                ->leftJoin(TABLE_SELECTED_VARIETIES.' as selected_varieties',function($join) use($year){
+                     $join->on('selected_varieties.variety_id', '=', 'varieties.id')
+                         ->on('selected_varieties.year',DB::raw($year));
+                })
+                ->addSelect('selected_varieties.rnd_ordering','selected_varieties.season_ids','selected_varieties.created_at','selected_varieties.updated_at')
+                ->orderBy('selected_varieties.rnd_ordering', 'DESC')
                 ->orderBy('varieties.id', 'DESC')
                 ->where('varieties.status', SYSTEM_STATUS_ACTIVE)
                 ->where('crop_types.crop_id', $cropId)
                 ->get();
+
             $items=[];
             foreach ($varieties as $variety){
-                $variety->rnd_code=$variety->crop_code;
-                $variety->rnd_ordering=rand(0,3);
+                $variety->crop_code=$this->cropInfo->code;
+                $variety->principal_info=$variety->principal_id>0?$principals[$variety->principal_id]:[];
+                $variety->competitor_info=$variety->competitor_id>0?$competitors[$variety->competitor_id]:[];
+                $variety->rnd_code=CommonHelper::get_rnd_code($variety,$year,true);
+                $variety->num_seasons=substr_count($variety->season_ids,',');
+                if($variety->num_seasons>0){
+                    $variety->num_seasons--;
+                }
                 $items[]=$variety;
             }
             return response()->json(['error'=>'','items'=> ['data'=>$items]]);
