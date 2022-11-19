@@ -53,6 +53,7 @@ class TaskHelper
     }
     public static function getUserGroupTasks($userGroupRole): array
     {
+        $curYear = date('Y');
         $crops=DB::table(TABLE_CROPS)
             ->select('id', 'name','ordering','status')
             ->orderBy('ordering', 'ASC')
@@ -95,6 +96,9 @@ class TaskHelper
                                 'ordering'=>$crop->ordering,
                                 'status'=>$crop->status
                             ];
+                            if(($task->id==Self::$VARIETY_SELECTION_ID)){
+                                $subtask->url.='/'.$curYear;
+                            }
                             $children[$subtask->parent][$subtask->id] = $subtask;
                         }
                     }
