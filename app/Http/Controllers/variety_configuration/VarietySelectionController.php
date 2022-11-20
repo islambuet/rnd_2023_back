@@ -134,14 +134,19 @@ class VarietySelectionController extends RootController
         if ($result) {
             $itemId=$result->id;
             $itemOld = (array)$result;
-            if($itemNew['season_ids']==$itemOld['season_ids']){
-                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => 'Nothing was Changed']);
+            $itemNew['rnd_ordering']=$itemOld['rnd_ordering'];
+            if($itemNew['rnd_ordering']>0){
+                if($itemNew['season_ids']==$itemOld['season_ids']){
+                    return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => 'Nothing was Changed']);
+                }
             }
         }
         else{
             $itemNew['year']=$year;
             $itemNew['variety_id']=$varietyId;
-            $itemNew['rnd_ordering']=1;
+            $itemNew['rnd_ordering']=0;
+        }
+        if($itemNew['rnd_ordering']==0){
             $max_result=DB::table(TABLE_SELECTED_VARIETIES.' as selected_varieties')
                 ->select(DB::raw('MAX(selected_varieties.rnd_ordering) as max_ordering'))
                 ->join(TABLE_VARIETIES.' as varieties', 'varieties.id', '=', 'selected_varieties.variety_id')
@@ -151,6 +156,9 @@ class VarietySelectionController extends RootController
                 ->first();
             if($max_result->max_ordering>0){
                 $itemNew['rnd_ordering']=$max_result->max_ordering+1;
+            }
+            else{
+                $itemNew['rnd_ordering']=1;
             }
         }
         //TODO validate crop_id
