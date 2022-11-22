@@ -18,6 +18,7 @@ class CreateSelectedVarieties extends Migration
             $table->smallInteger('year');
             $table->integer('variety_id');
             $table->smallInteger('rnd_ordering')->default(0);
+            $table->string('rnd_code')->nullable();
             $table->string('season_ids')->default(',');
             $table->integer('created_by');
             $table->integer('updated_by')->nullable();

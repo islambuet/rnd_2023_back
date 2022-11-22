@@ -61,16 +61,6 @@ class VarietySelectionController extends RootController
     public function getItems(Request $request, $cropId, $year): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
-            $results=DB::table(TABLE_PRINCIPALS)->get();
-            $principals=[];
-            foreach ($results as $result){
-                $principals[$result->id]=$result;
-            }
-            $results=DB::table(TABLE_COMPETITORS)->get();
-            $competitors=[];
-            foreach ($results as $result){
-                $competitors[$result->id]=$result;
-            }
 
             $varieties=DB::table(TABLE_VARIETIES.' as varieties')
                 ->select('varieties.*')
@@ -80,26 +70,13 @@ class VarietySelectionController extends RootController
                      $join->on('selected_varieties.variety_id', '=', 'varieties.id')
                          ->on('selected_varieties.year',DB::raw($year));
                 })
-                ->addSelect('selected_varieties.rnd_ordering','selected_varieties.season_ids','selected_varieties.created_at','selected_varieties.updated_at')
+                ->addSelect('selected_varieties.rnd_ordering','selected_varieties.rnd_code','selected_varieties.season_ids','selected_varieties.created_at','selected_varieties.updated_at')
                 ->orderBy('selected_varieties.rnd_ordering', 'DESC')
                 ->orderBy('varieties.id', 'DESC')
                 ->where('varieties.status', SYSTEM_STATUS_ACTIVE)
                 ->where('crop_types.crop_id', $cropId)
                 ->get();
-
-            $items=[];
-            foreach ($varieties as $variety){
-                $variety->crop_code=$this->cropInfo->code;
-                $variety->principal_info=$variety->principal_id>0?$principals[$variety->principal_id]:[];
-                $variety->competitor_info=$variety->competitor_id>0?$competitors[$variety->competitor_id]:[];
-                $variety->rnd_code=CommonHelper::get_rnd_code($variety,$year,true);
-                $variety->num_seasons=substr_count($variety->season_ids,',');
-                if($variety->num_seasons>0){
-                    $variety->num_seasons--;
-                }
-                $items[]=$variety;
-            }
-            return response()->json(['error'=>'','items'=> ['data'=>$items]]);
+            return response()->json(['error'=>'','items'=> ['data'=>$varieties]]);
         } else {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
         }
@@ -110,6 +87,15 @@ class VarietySelectionController extends RootController
         $varietyId = $request->input('variety_id', 0);
         if ($this->permissions->action_2 != 1) {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have add access')]);
+        }
+        $variety=DB::table(TABLE_VARIETIES.' as varieties')
+            ->select('varieties.*')
+            ->join(TABLE_CROP_TYPES.' as crop_types', 'crop_types.id', '=', 'varieties.crop_type_id')
+            ->addSelect('crop_types.name as crop_type_name','crop_types.code as crop_type_code')
+            ->where('varieties.id', $varietyId)
+            ->first();
+        if(!$variety){
+            return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid varietyId ' . $varietyId)]);
         }
         //permission checking passed
         $this->checkSaveToken();
@@ -161,6 +147,9 @@ class VarietySelectionController extends RootController
                 $itemNew['rnd_ordering']=1;
             }
         }
+        $variety->crop_code=$this->cropInfo->code;
+        $variety->rnd_ordering=$itemNew['rnd_ordering'];
+        $itemNew['rnd_code']=CommonHelper::get_rnd_code($variety,$year,true);
         //TODO validate crop_id
         //Input validation ends
         DB::beginTransaction();
