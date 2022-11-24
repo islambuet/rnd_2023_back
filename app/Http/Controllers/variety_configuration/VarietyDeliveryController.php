@@ -47,134 +47,140 @@ class VarietyDeliveryController extends RootController
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
         }
     }
-
-    public function getItems(Request $request): JsonResponse
+    public function getItems(Request $request, $trialStationId, $year,$seasonId): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
-            $perPage = $request->input('perPage', 50);
-            $query=DB::table(TABLE_CROPS);
-            $query->orderBy('id', 'DESC');
-            $query->where('status', '!=', SYSTEM_STATUS_DELETE);//
-            if ($perPage == -1) {
-                $perPage = $query->count();
-                if($perPage<1){
-                    $perPage=50;
-                }
+            $query=DB::table(TABLE_TRIAL_VARIETIES.' as trial_varieties');
+            $query->select('trial_varieties.variety_id','trial_varieties.rnd_ordering','trial_varieties.rnd_code','trial_varieties.replica','trial_varieties.delivered_date');
+            $query->where('trial_varieties.trial_station_id',$trialStationId);
+            $query->where('trial_varieties.year',$year);
+            $query->where('trial_varieties.season_id', $seasonId);
+            $query->join(TABLE_VARIETIES.' as varieties', 'varieties.id', '=', 'trial_varieties.variety_id');
+            $query->addSelect('varieties.name as variety_name','varieties.crop_type_id');
+            $query->join(TABLE_CROP_TYPES.' as crop_types', 'crop_types.id', '=', 'varieties.crop_type_id');
+            $query->addSelect('crop_types.name as crop_type_name','crop_types.crop_id');
+            $query->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id');
+            $query->addSelect('crops.name as crop_name','crops.replica');
+            $query->where('trial_varieties.delivery_status', SYSTEM_STATUS_YES);
+            $results = $query->get();
+            $itemsDelivered=[];
+            $deliveredVarietyIds=[];
+            foreach ($results as $result){
+                $itemsDelivered[$result->crop_id]['crop_id']=$result->crop_id;
+                $itemsDelivered[$result->crop_id]['crop_name']=$result->crop_name;
+                $itemsDelivered[$result->crop_id]['varieties'][]=$result;
+                $deliveredVarietyIds[]=$result->variety_id;
             }
-            $results = $query->paginate($perPage)->toArray();
-            return response()->json(['error'=>'','items'=>$results]);
-        } else {
+
+
+            $query=DB::table(TABLE_SELECTED_VARIETIES.' as selected_varieties');
+            $query->select('selected_varieties.variety_id','selected_varieties.rnd_ordering','selected_varieties.rnd_code');
+            $query->where('selected_varieties.year',$year);
+            $query->where('selected_varieties.season_ids', 'like', '%,'.$seasonId.',%');
+            $query->join(TABLE_VARIETIES.' as varieties', 'varieties.id', '=', 'selected_varieties.variety_id');
+            $query->addSelect('varieties.name as variety_name','varieties.crop_type_id');
+            $query->join(TABLE_CROP_TYPES.' as crop_types', 'crop_types.id', '=', 'varieties.crop_type_id');
+            $query->addSelect('crop_types.name as crop_type_name','crop_types.crop_id');
+            $query->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id');
+            $query->addSelect('crops.name as crop_name','crops.replica');
+            if(count($deliveredVarietyIds)>0){
+                $query->whereNotIn('selected_varieties.variety_id', $deliveredVarietyIds);
+            }
+            $results = $query->get();
+            $itemsPending=[];
+            foreach ($results as $result){
+                $itemsPending[$result->crop_id]['crop_id']=$result->crop_id;
+                $itemsPending[$result->crop_id]['crop_name']=$result->crop_name;
+                $itemsPending[$result->crop_id]['varieties'][]=$result;
+            }
+            return response()->json(['error'=>'','itemsPending'=> $itemsPending,'itemsDelivered'=>$itemsDelivered]);
+        }
+        else {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
         }
     }
 
-    public function getItem(Request $request, $itemId): JsonResponse
+    public function savePending(Request $request, $trialStationId, $year,$seasonId): JsonResponse
     {
-        if ($this->permissions->action_0 == 1) {
-            $result = DB::table(TABLE_CROPS)->find($itemId);
-            if (!$result) {
-                return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid Id ' . $itemId)]);
-            }
-            return response()->json(['error'=>'','item'=>$result]);
-        } else {
-            return response()->json(['error' => 'ACCESS_DENIED', 'messages' => $this->permissions]);
-        }
-    }
-
-    public function saveItem(Request $request): JsonResponse
-    {
-        $itemId = $request->input('id', 0);
-        //permission checking start
-        if ($itemId > 0) {
-            if ($this->permissions->action_2 != 1) {
-                return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have add access')]);
-            }
-        } else {
-            if ($this->permissions->action_1 != 1) {
-                return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have add access')]);
-            }
+        if ($this->permissions->action_2 != 1) {
+            return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have add access')]);
         }
         //permission checking passed
         $this->checkSaveToken();
-        //Input validation start
-        $validation_rule = [];
-        $validation_rule['name'] = ['required'];
-        $validation_rule['code'] = ['required'];
-        $validation_rule['replica'] = [Rule::in([SYSTEM_STATUS_YES, SYSTEM_STATUS_NO])];
-        $validation_rule['initial_plants']=['numeric'];
-        $validation_rule['ordering']=['numeric'];
-        $validation_rule['status'] = [Rule::in([SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE])];
+        $delivered_date=$request->input('delivered_date');
 
-        $itemNew = $request->input('item');
-        $itemOld = [];
-
-        $this->validateInputKeys($itemNew, array_keys($validation_rule));
-
-        //edit change checking
-        if ($itemId > 0) {
-            $result = DB::table(TABLE_CROPS)->select(array_keys($validation_rule))->find($itemId);
-            if (!$result) {
-                return response()->json(['error' => 'ITEM_NOT_FOUND', 'messages' => __('Invalid Id ' . $itemId)]);
+        if(!$delivered_date){
+            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Delivery Date required']);
+        }
+        $varieties=$request->input('varieties');
+        $itemsNew=[];
+        if(!$varieties){
+            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Nothing was selected']);
+        }
+        foreach ($varieties as $variety){
+            if(isset($variety['variety_id'])){
+                $itemsNew[$variety['variety_id']]=$variety;
             }
-            $itemOld = (array)$result;
-            foreach ($itemOld as $key => $oldValue) {
-                if (array_key_exists($key, $itemNew)) {
-                    if ($oldValue == $itemNew[$key]) {
-                        //unchanged so remove from both
-                        unset($itemNew[$key]);
-                        unset($itemOld[$key]);
-                        unset($validation_rule[$key]);
-                    }
-                } else {
-                    //will not happen if it comes form vue. removing rule and key for not change
-                    unset($validation_rule[$key]);
-                    unset($itemOld[$key]);
+        }
+        if(count($itemsNew)==0){
+            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Nothing was selected']);
+        }
+        $itemsOld=[];
+        $results=DB::table(TABLE_TRIAL_VARIETIES)
+            ->where('year',$year)
+            ->where('trial_station_id',$trialStationId)
+            ->where('season_id',$seasonId)
+            ->get();
+        foreach ($results as $result){
+            $itemsOld[$result->variety_id]=$result;
+        }
+        //Input validation ends
+//        DB::beginTransaction();
+//        try {
+            $time = Carbon::now();
+            foreach ($itemsNew as $variety_id=>$itemNew){
+                if(isset($itemsOld[$variety_id])){
+                    $itemNew['delivery_status']=SYSTEM_STATUS_YES;
+                    $itemNew['delivered_date']=$delivered_date;
+                    $itemNew['delivered_by'] = $this->user->id;
+                    $itemNew['delivered_at'] = $time;
+                    $itemNew['sowing_status']=SYSTEM_STATUS_NO;
+                    DB::table(TABLE_TRIAL_VARIETIES)->where('id', $itemsOld[$variety_id]->id)->update($itemNew);
+                    //history
+                    $dataHistory = [];
+                    $dataHistory['table_name'] = TABLE_CROPS;
+                    $dataHistory['controller'] = (new \ReflectionClass(__CLASS__))->getShortName();
+                    $dataHistory['method'] = __FUNCTION__;
+                    $dataHistory['table_id'] = $itemsOld[$variety_id]->id;
+                    $dataHistory['action'] = DB_ACTION_EDIT;
+                    $dataHistory['data_old'] = json_encode($itemsOld[$variety_id]);
+                    $dataHistory['data_new'] = json_encode($itemNew);
+                    $dataHistory['created_at'] = $time;
+                    $dataHistory['created_by'] = $this->user->id;
+
+                    $this->dBSaveHistory($dataHistory, TABLE_SYSTEM_HISTORIES);
+                }
+                else{
+                    $itemNew['trial_station_id']=$trialStationId;
+                    $itemNew['year']=$year;
+                    $itemNew['season_id']=$seasonId;
+                    $itemNew['delivery_status']=SYSTEM_STATUS_YES;
+                    $itemNew['delivered_date']=$delivered_date;
+                    $itemNew['delivered_by'] = $this->user->id;
+                    $itemNew['delivered_at'] = $time;
+                    $itemNew['sowing_status']=SYSTEM_STATUS_NO;
+                    DB::table(TABLE_TRIAL_VARIETIES)->insertGetId($itemNew);
                 }
             }
-        }
-        //if itemNew Empty
-        if (!$itemNew) {
-            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' => 'Nothing was Changed']);
-        }
-        $this->validateInputValues($itemNew, $validation_rule);
-        //Input validation ends
-        DB::beginTransaction();
-        try {
-            $time = Carbon::now();
-            $dataHistory = [];
-            $dataHistory['table_name'] = TABLE_CROPS;
-            $dataHistory['controller'] = (new \ReflectionClass(__CLASS__))->getShortName();
-            $dataHistory['method'] = __FUNCTION__;
-            $newId = $itemId;
-            if ($itemId > 0) {
-                $itemNew['updated_by'] = $this->user->id;
-                $itemNew['updated_at'] = $time;
-                DB::table(TABLE_CROPS)->where('id', $itemId)->update($itemNew);
-                $dataHistory['table_id'] = $itemId;
-                $dataHistory['action'] = DB_ACTION_EDIT;
-            } else {
-                $itemNew['created_by'] = $this->user->id;
-                $itemNew['created_at'] = $time;
-                $newId = DB::table(TABLE_CROPS)->insertGetId($itemNew);
-                $dataHistory['table_id'] = $newId;
-                $dataHistory['action'] = DB_ACTION_ADD;
-            }
-            unset($itemNew['updated_by'],$itemNew['created_by'],$itemNew['created_at'],$itemNew['updated_at']);
-
-            $dataHistory['data_old'] = json_encode($itemOld);
-            $dataHistory['data_new'] = json_encode($itemNew);
-            $dataHistory['created_at'] = $time;
-            $dataHistory['created_by'] = $this->user->id;
-
-            $this->dBSaveHistory($dataHistory, TABLE_SYSTEM_HISTORIES);
             $this->updateSaveToken();
             DB::commit();
 
-            return response()->json(['error' => '', 'messages' => 'Data (' . $newId . ')' . ($itemId > 0 ? 'Updated' : 'Created') . ')  Successfully']);
-        } catch (\Exception $ex) {
-            DB::rollback();
-            return response()->json(['error' => 'DB_SAVE_FAILED', 'messages' => __('Failed to save.')]);
-        }
+            return response()->json(['error' => '', 'messages' => 'Delivered  Successfully']);
+//        }
+//        catch (\Exception $ex) {
+//            DB::rollback();
+//            return response()->json(['error' => 'DB_SAVE_FAILED', 'messages' => __('Failed to save.')]);
+//        }
     }
 }
 

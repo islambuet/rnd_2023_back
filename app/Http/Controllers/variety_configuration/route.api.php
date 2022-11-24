@@ -17,7 +17,7 @@ $controllerClass= Controllers\variety_configuration\VarietyDeliveryController::c
 /** @noinspection DuplicatedCode */
 Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
     Route::match(['GET','POST'],$url.'/initialize', [$controllerClass, 'initialize']);
-//    Route::match(['GET','POST'],$url.'/get-items', [$controllerClass, 'getItems']);
+    Route::match(['GET','POST'],$url.'/{trialStationId}/{year}/{seasonId}/get-items', [$controllerClass, 'getItems']);
 //    Route::match(['GET','POST'],$url.'/get-item/{itemId}', [$controllerClass, 'getItem']);
-//    Route::post($url.'/save-item', [$controllerClass, 'saveItem']);
+    Route::post($url.'/{trialStationId}/{year}/{seasonId}/save-pending', [$controllerClass, 'savePending']);
 });
