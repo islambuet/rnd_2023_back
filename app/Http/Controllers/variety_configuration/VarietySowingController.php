@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 
-class VarietyDeliveryController extends RootController
+class VarietySowingController extends RootController
 {
-    public $api_url = 'variety-configuration/delivery';
+    public $api_url = 'variety-configuration/sowing';
     public $permissions;
 
     public function __construct()
@@ -62,30 +62,7 @@ class VarietyDeliveryController extends RootController
             $query->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id');
             $query->addSelect('crops.name as crop_name','crops.replica');
             $query->where('trial_varieties.delivery_status', SYSTEM_STATUS_YES);
-            $results = $query->get();
-            $itemsDelivered=[];
-            $deliveredVarietyIds=[];
-            foreach ($results as $result){
-                $itemsDelivered[$result->crop_id]['crop_id']=$result->crop_id;
-                $itemsDelivered[$result->crop_id]['crop_name']=$result->crop_name;
-                $itemsDelivered[$result->crop_id]['varieties'][]=$result;
-                $deliveredVarietyIds[]=$result->variety_id;
-            }
-
-
-            $query=DB::table(TABLE_SELECTED_VARIETIES.' as selected_varieties');
-            $query->select('selected_varieties.variety_id','selected_varieties.rnd_ordering','selected_varieties.rnd_code');
-            $query->where('selected_varieties.year',$year);
-            $query->where('selected_varieties.season_ids', 'like', '%,'.$seasonId.',%');
-            $query->join(TABLE_VARIETIES.' as varieties', 'varieties.id', '=', 'selected_varieties.variety_id');
-            $query->addSelect('varieties.name as variety_name','varieties.crop_type_id');
-            $query->join(TABLE_CROP_TYPES.' as crop_types', 'crop_types.id', '=', 'varieties.crop_type_id');
-            $query->addSelect('crop_types.name as crop_type_name','crop_types.crop_id');
-            $query->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id');
-            $query->addSelect('crops.name as crop_name','crops.replica');
-            if(count($deliveredVarietyIds)>0){
-                $query->whereNotIn('selected_varieties.variety_id', $deliveredVarietyIds);
-            }
+            $query->where('trial_varieties.sowing_status', SYSTEM_STATUS_NO);
             $results = $query->get();
             $itemsPending=[];
             foreach ($results as $result){
@@ -93,13 +70,33 @@ class VarietyDeliveryController extends RootController
                 $itemsPending[$result->crop_id]['crop_name']=$result->crop_name;
                 $itemsPending[$result->crop_id]['varieties'][]=$result;
             }
-            return response()->json(['error'=>'','itemsPending'=> $itemsPending,'itemsDelivered'=>$itemsDelivered]);
+
+            $query=DB::table(TABLE_TRIAL_VARIETIES.' as trial_varieties');
+            $query->select('trial_varieties.variety_id','trial_varieties.rnd_ordering','trial_varieties.rnd_code','trial_varieties.replica','trial_varieties.delivered_date','trial_varieties.sowing_date');
+            $query->where('trial_varieties.trial_station_id',$trialStationId);
+            $query->where('trial_varieties.year',$year);
+            $query->where('trial_varieties.season_id', $seasonId);
+            $query->join(TABLE_VARIETIES.' as varieties', 'varieties.id', '=', 'trial_varieties.variety_id');
+            $query->addSelect('varieties.name as variety_name','varieties.crop_type_id');
+            $query->join(TABLE_CROP_TYPES.' as crop_types', 'crop_types.id', '=', 'varieties.crop_type_id');
+            $query->addSelect('crop_types.name as crop_type_name','crop_types.crop_id');
+            $query->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id');
+            $query->addSelect('crops.name as crop_name','crops.replica');
+            $query->where('trial_varieties.delivery_status', SYSTEM_STATUS_YES);
+            $query->where('trial_varieties.sowing_status', SYSTEM_STATUS_YES);
+            $results = $query->get();
+            $itemsSowed=[];
+            foreach ($results as $result){
+                $itemsSowed[$result->crop_id]['crop_id']=$result->crop_id;
+                $itemsSowed[$result->crop_id]['crop_name']=$result->crop_name;
+                $itemsSowed[$result->crop_id]['varieties'][]=$result;
+            }
+            return response()->json(['error'=>'','itemsPending'=> $itemsPending,'itemsSowed'=>$itemsSowed]);
         }
         else {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
         }
     }
-
     public function savePending(Request $request, $trialStationId, $year,$seasonId): JsonResponse
     {
         if ($this->permissions->action_2 != 1) {
@@ -107,24 +104,18 @@ class VarietyDeliveryController extends RootController
         }
         //permission checking passed
         $this->checkSaveToken();
-        $delivered_date=$request->input('delivered_date');
+        $sowing_date=$request->input('sowing_date');
 
-        if(!$delivered_date){
-            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Delivery Date required']);
+        if(!$sowing_date){
+            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Sowing Date required']);
         }
-        $varieties=$request->input('varieties');
-        $itemsNew=[];
-        if(!$varieties){
+
+        $variety_ids=$request->input('variety_ids');
+
+        if(!$variety_ids){
             return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Nothing was selected']);
         }
-        foreach ($varieties as $variety){
-            if(isset($variety['variety_id'])){
-                $itemsNew[$variety['variety_id']]=$variety;
-            }
-        }
-        if(count($itemsNew)==0){
-            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Nothing was selected']);
-        }
+
         $itemsOld=[];
         $results=DB::table(TABLE_TRIAL_VARIETIES)
             ->where('year',$year)
@@ -134,17 +125,19 @@ class VarietyDeliveryController extends RootController
         foreach ($results as $result){
             $itemsOld[$result->variety_id]=$result;
         }
+
         //Input validation ends
         DB::beginTransaction();
         try {
             $time = Carbon::now();
-            foreach ($itemsNew as $variety_id=>$itemNew){
+            foreach ($variety_ids as $variety_id){
                 if(isset($itemsOld[$variety_id])){
-                    $itemNew['delivery_status']=SYSTEM_STATUS_YES;
-                    $itemNew['delivered_date']=$delivered_date;
-                    $itemNew['delivered_by'] = $this->user->id;
-                    $itemNew['delivered_at'] = $time;
-                    $itemNew['sowing_status']=SYSTEM_STATUS_NO;
+                    $itemNew=[];
+                    $itemNew['sowing_status']=SYSTEM_STATUS_YES;
+                    $itemNew['sowing_date']=$sowing_date;
+                    $itemNew['sowing_by'] = $this->user->id;
+                    $itemNew['sowing_at'] = $time;
+
                     DB::table(TABLE_TRIAL_VARIETIES)->where('id', $itemsOld[$variety_id]->id)->update($itemNew);
                     //history
                     $dataHistory = [];
@@ -160,29 +153,17 @@ class VarietyDeliveryController extends RootController
 
                     $this->dBSaveHistory($dataHistory, TABLE_SYSTEM_HISTORIES);
                 }
-                else{
-                    $itemNew['trial_station_id']=$trialStationId;
-                    $itemNew['year']=$year;
-                    $itemNew['season_id']=$seasonId;
-                    $itemNew['delivery_status']=SYSTEM_STATUS_YES;
-                    $itemNew['delivered_date']=$delivered_date;
-                    $itemNew['delivered_by'] = $this->user->id;
-                    $itemNew['delivered_at'] = $time;
-                    $itemNew['sowing_status']=SYSTEM_STATUS_NO;
-                    DB::table(TABLE_TRIAL_VARIETIES)->insertGetId($itemNew);
-                }
             }
             $this->updateSaveToken();
             DB::commit();
-
-            return response()->json(['error' => '', 'messages' => 'Delivered  Successfully']);
+            return response()->json(['error' => '', 'messages' => 'Sowed Successfully']);
         }
         catch (\Exception $ex) {
             DB::rollback();
             return response()->json(['error' => 'DB_SAVE_FAILED', 'messages' => __('Failed to save.')]);
         }
     }
-    public function saveDelivered(Request $request, $trialStationId, $year,$seasonId): JsonResponse
+    public function saveSowed(Request $request, $trialStationId, $year,$seasonId): JsonResponse
     {
         if ($this->permissions->action_2 != 1) {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have add access')]);
@@ -212,10 +193,10 @@ class VarietyDeliveryController extends RootController
             foreach ($variety_ids as $variety_id){
                 if(isset($itemsOld[$variety_id])){
                     $itemNew=[];
-                    $itemNew['delivery_status']=SYSTEM_STATUS_NO;
-                    $itemNew['delivered_by'] = $this->user->id;
-                    $itemNew['delivered_at'] = $time;
                     $itemNew['sowing_status']=SYSTEM_STATUS_NO;
+                    $itemNew['sowing_by'] = $this->user->id;
+                    $itemNew['sowing_at'] = $time;
+                    
                     DB::table(TABLE_TRIAL_VARIETIES)->where('id', $itemsOld[$variety_id]->id)->update($itemNew);
                     //history
                     $dataHistory = [];
