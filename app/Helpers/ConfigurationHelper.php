@@ -35,5 +35,9 @@
         {
             return self::$config[SYSTEM_CONFIGURATIONS_MOBILE_SMS_API_TOKEN] ?? '';
         }
+        public static function getCurrentSeasonId():float
+        {
+            return isset(self::$config[SYSTEM_CONFIGURATIONS_CURRENT_SEASON_ID])?(float)self::$config[SYSTEM_CONFIGURATIONS_CURRENT_SEASON_ID]:2;
+        }
 
     }

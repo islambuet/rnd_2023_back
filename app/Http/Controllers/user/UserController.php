@@ -28,6 +28,7 @@ class UserController extends RootController
         if($this->user){
             $response['user']=$this->getUserForApi($this->user);
         }
+        $response['current_season_id']=ConfigurationHelper::getCurrentSeasonId();
         return response()->json($response);
     }
     public function login(Request $request): JsonResponse
