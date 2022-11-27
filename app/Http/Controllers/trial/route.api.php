@@ -21,5 +21,6 @@ $controllerClass= Controllers\trial\TrialDataController::class;
 /** @noinspection DuplicatedCode */
 Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
     Route::match(['GET','POST'],$url.'/{cropId}/{formId}/initialize', [$controllerClass, 'initialize']);
+    Route::match(['GET','POST'],$url.'/{cropId}/{formId}/{trialStationId}/{year}/{seasonId}/get-items', [$controllerClass, 'getItems']);
 });
 
