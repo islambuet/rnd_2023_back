@@ -60,7 +60,7 @@ class VarietySowingController extends RootController
             $query->join(TABLE_CROP_TYPES.' as crop_types', 'crop_types.id', '=', 'varieties.crop_type_id');
             $query->addSelect('crop_types.name as crop_type_name','crop_types.crop_id');
             $query->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id');
-            $query->addSelect('crops.name as crop_name','crops.replica');
+            $query->addSelect('crops.name as crop_name');
             $query->where('trial_varieties.delivery_status', SYSTEM_STATUS_YES);
             $query->where('trial_varieties.sowing_status', SYSTEM_STATUS_NO);
             $results = $query->get();
@@ -81,7 +81,7 @@ class VarietySowingController extends RootController
             $query->join(TABLE_CROP_TYPES.' as crop_types', 'crop_types.id', '=', 'varieties.crop_type_id');
             $query->addSelect('crop_types.name as crop_type_name','crop_types.crop_id');
             $query->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id');
-            $query->addSelect('crops.name as crop_name','crops.replica');
+            $query->addSelect('crops.name as crop_name');
             $query->where('trial_varieties.delivery_status', SYSTEM_STATUS_YES);
             $query->where('trial_varieties.sowing_status', SYSTEM_STATUS_YES);
             $results = $query->get();
@@ -196,7 +196,7 @@ class VarietySowingController extends RootController
                     $itemNew['sowing_status']=SYSTEM_STATUS_NO;
                     $itemNew['sowing_by'] = $this->user->id;
                     $itemNew['sowing_at'] = $time;
-                    
+
                     DB::table(TABLE_TRIAL_VARIETIES)->where('id', $itemsOld[$variety_id]->id)->update($itemNew);
                     //history
                     $dataHistory = [];

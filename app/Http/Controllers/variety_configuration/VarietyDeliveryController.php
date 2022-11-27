@@ -60,7 +60,7 @@ class VarietyDeliveryController extends RootController
             $query->join(TABLE_CROP_TYPES.' as crop_types', 'crop_types.id', '=', 'varieties.crop_type_id');
             $query->addSelect('crop_types.name as crop_type_name','crop_types.crop_id');
             $query->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id');
-            $query->addSelect('crops.name as crop_name','crops.replica');
+            $query->addSelect('crops.name as crop_name');
             $query->where('trial_varieties.delivery_status', SYSTEM_STATUS_YES);
             $results = $query->get();
             $itemsDelivered=[];
