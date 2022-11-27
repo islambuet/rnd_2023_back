@@ -37,18 +37,31 @@ class TrialDataController extends RootController
     public function initialize(Request $request, $cropId,$formId): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
-            $query=DB::table(TABLE_TRIAL_FORM_INPUTS);
-            $query->where('trial_form_id', $formId);//
-            $query->orderBy('ordering', 'ASC');
-            $query->orderBy('id', 'ASC');
-            $query->where('status', SYSTEM_STATUS_ACTIVE);
-            $itemsInput = $query->get();
+            $inputFields=DB::table(TABLE_TRIAL_FORM_INPUTS)
+                ->where('trial_form_id', $formId)
+                ->orderBy('ordering', 'ASC')
+                ->orderBy('id', 'ASC')
+                ->where('status', SYSTEM_STATUS_ACTIVE)
+                ->get();
+
+            $trial_stations=DB::table(TABLE_TRIAL_STATIONS)
+                ->select('id', 'name')
+                ->orderBy('ordering', 'ASC')
+                ->where('status', SYSTEM_STATUS_ACTIVE)
+                ->get();
+            $seasons=DB::table(TABLE_SEASONS)
+                ->select('id', 'name')
+                ->orderBy('ordering', 'ASC')
+                ->where('status', SYSTEM_STATUS_ACTIVE)
+                ->get();
+
             return response()->json(
                 ['error'=>'','permissions'=>$this->permissions,
                     'cropInfo'=>$this->cropInfo,
                     'formInfo'=>$this->formInfo,
-                    'itemsInput'=>$itemsInput,
-                    'seasons'=> DB::table(TABLE_SEASONS)->where('status',SYSTEM_STATUS_ACTIVE)->get()
+                    'inputFields'=>$inputFields,
+                    'trial_stations' => $trial_stations,
+                    'seasons'=>$seasons
                 ]);
         } else {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
