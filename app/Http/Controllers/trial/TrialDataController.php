@@ -184,8 +184,32 @@ class TrialDataController extends RootController
         $itemOld = [];
         $this->validateInputKeys($itemNew, array_keys($validation_rule));
         $this->validateInputValues($itemNew, $validation_rule);
+
+
+        //variety info and sowed checking
+        $trial_variety=DB::table(TABLE_TRIAL_VARIETIES)
+            ->where('trial_station_id',$itemNew['trial_station_id'])
+            ->where('year',$itemNew['year'])
+            ->where('season_id',$itemNew['season_id'])
+            ->where('variety_id', $itemNew['variety_id'])
+            ->where('sowing_status', SYSTEM_STATUS_YES)
+            ->first();
+        if(!$trial_variety){
+            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Invalid Variety Id: '.$itemNew['variety_id']]);
+        }
+        //variety info and sowed checking
+        if(!isset($itemNew['data_1'])){
+            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Normal Data missing']);
+        }
+        if($trial_variety->replica==SYSTEM_STATUS_YES){
+            if(!isset($itemNew['data_2'])){
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Replica Data missing']);
+            }
+        }
+
+        //entry no checking
         if($itemNew['entry_no']<1){
-            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Invalid Entry '.$itemNew['entry_no']]);
+            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Invalid Entry No: '.$itemNew['entry_no']]);
         }
         if($this->formInfo->entry_count==-1){
             $result=DB::table(TABLE_TRIAL_DATA)
@@ -196,14 +220,37 @@ class TrialDataController extends RootController
                 ->where('variety_id', $itemNew['variety_id'])
                 ->max('entry_no');
             if($itemNew['entry_no']>($result+1)){
-                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Invalid Entry '.$itemNew['entry_no']]);
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Invalid Entry No: '.$itemNew['entry_no']]);
             }
         }
         else{
             if($itemNew['entry_no']>$this->formInfo->entry_count){
-                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Invalid Entry '.$itemNew['entry_no']]);
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Invalid Entry No: '.$itemNew['entry_no']]);
             }
         }
+        //entry no checking end
+        //mandatory checking
+        $inputFields=DB::table(TABLE_TRIAL_FORM_INPUTS)
+            ->where('trial_form_id', $formId)
+            ->orderBy('ordering', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->where('status', SYSTEM_STATUS_ACTIVE)
+            ->get();
+        foreach ($inputFields as $field){
+            if($field->mandatory==SYSTEM_STATUS_YES){
+                if($field->type !='checkbox'){
+                    if((!isset($itemNew['data_1'][$field->id]))||(!($itemNew['data_1'][$field->id]))){
+                        return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>$field->name.' for Normal Required']);
+                    }
+                    if($trial_variety->replica==SYSTEM_STATUS_YES){
+                        if((!isset($itemNew['data_2'][$field->id]))||(!($itemNew['data_2'][$field->id]))){
+                            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>$field->name.' for Replica Required']);
+                        }
+                    }
+                }
+            }
+        }
+        //mandatory checking end
         $result=DB::table(TABLE_TRIAL_DATA)
             ->where('trial_station_id',$itemNew['trial_station_id'])
             ->where('year',$itemNew['year'])
