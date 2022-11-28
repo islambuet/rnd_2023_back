@@ -119,31 +119,145 @@ class TrialDataController extends RootController
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
         }
     }
+    public function getItem(Request $request, $cropId,$formId,$trialStationId, $year,$seasonId,$varietyId,$entryNo): JsonResponse{
+        $inputFields=DB::table(TABLE_TRIAL_FORM_INPUTS)
+            ->where('trial_form_id', $formId)
+            ->orderBy('ordering', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->where('status', SYSTEM_STATUS_ACTIVE)
+            ->get();
+        $defaults=[];
+        foreach ($inputFields as $field){
+            if($field->type=='checkbox'){
+                $defaults[$field->id]=[];
+            }
+            else{
+                $defaults[$field->id]=$field->default;
+            }
+        }
+
+        $trial_data=DB::table(TABLE_TRIAL_DATA)
+            ->where('trial_station_id',$trialStationId)
+            ->where('year',$year)
+            ->where('season_id',$seasonId)
+            ->where('trial_form_id', $formId)
+            ->where('variety_id', $varietyId)
+            ->where('entry_no', $entryNo)
+            ->first();
+        if($trial_data){
+            $response['error']='';
+            if($trial_data->data_1){
+                $response['data_1']=json_decode($trial_data->data_1);
+            }
+            else{
+                $response['data_1']=(object)[];
+            }
+            if($trial_data->data_2){
+                $response['data_2']=json_decode($trial_data->data_2);
+            }
+            else{
+                $response['data_2']=(object)[];
+            }
+            return response()->json($response);
+        }
+        else{
+            return response()->json(['error' => '', 'data_1' =>$defaults,'data_2'=>$defaults]);
+        }
+    }
     public function saveItem(Request $request,$cropId,$formId): JsonResponse{
-//        $year=$request->input('year');
-//        $trial_station_id=$request->input('trial_station_id');
-//        $season_id=$request->input('season_id');
-//        $variety_id=$request->input('variety_id');
-//        $entry_no=$request->input('entry_no');
-//        $data_1=$request->input('item');
-//        $data_2=$request->input('data_2');
-        $time = Carbon::now();
-        $itemNew=$request->input('item');
-        $itemNew['trial_form_id']=$formId;
-        $itemNew['created_by'] = $this->user->id;
-        $itemNew['created_at'] = $time;
-//        $itemNew['year']=$year;
-//        $itemNew['trial_station_id']=$trial_station_id;
-//        $itemNew['season_id']=$season_id;
-//        $itemNew['variety_id']=$variety_id;
-//        $itemNew['entry_no']=$entry_no;
-        $itemNew['data_1']=json_encode($itemNew['data_1']);
+        if ($this->permissions->action_2 != 1) {
+            return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have add access')]);
+        }
+
+        $this->checkSaveToken();
+        $validation_rule = [];
+
+        $validation_rule['trial_station_id'] = ['required'];
+        $validation_rule['year'] = ['required','numeric'];
+        $validation_rule['season_id'] = ['required'];
+        $validation_rule['variety_id'] = ['required'];
+        $validation_rule['entry_no'] = ['required','numeric'];
+        $validation_rule['data_1'] = ['nullable'];
+        $validation_rule['data_2'] = ['nullable'];
+
+        $itemNew = $request->input('item');
+        $itemOld = [];
+        $this->validateInputKeys($itemNew, array_keys($validation_rule));
+        $this->validateInputValues($itemNew, $validation_rule);
+        if($itemNew['entry_no']<1){
+            return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Invalid Entry '.$itemNew['entry_no']]);
+        }
+        if($this->formInfo->entry_count==-1){
+            $result=DB::table(TABLE_TRIAL_DATA)
+                ->where('trial_station_id',$itemNew['trial_station_id'])
+                ->where('year',$itemNew['year'])
+                ->where('season_id',$itemNew['season_id'])
+                ->where('trial_form_id', $formId)
+                ->where('variety_id', $itemNew['variety_id'])
+                ->max('entry_no');
+            if($itemNew['entry_no']>($result+1)){
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Invalid Entry '.$itemNew['entry_no']]);
+            }
+        }
+        else{
+            if($itemNew['entry_no']>$this->formInfo->entry_count){
+                return response()->json(['error' => 'VALIDATION_FAILED', 'messages' =>'Invalid Entry '.$itemNew['entry_no']]);
+            }
+        }
+        $result=DB::table(TABLE_TRIAL_DATA)
+            ->where('trial_station_id',$itemNew['trial_station_id'])
+            ->where('year',$itemNew['year'])
+            ->where('season_id',$itemNew['season_id'])
+            ->where('trial_form_id', $formId)
+            ->where('variety_id', $itemNew['variety_id'])
+            ->where('entry_no', $itemNew['entry_no'])
+            ->select(array_keys($validation_rule))
+            ->addSelect('id')
+            ->first();
+        if($result){
+            $itemOld=(array)$result;
+        }
+        if(isset($itemNew['data_1'])){
+            $itemNew['data_1']=json_encode($itemNew['data_1']);
+        }
         if(isset($itemNew['data_2'])){
             $itemNew['data_2']=json_encode($itemNew['data_2']);
         }
-        DB::table(TABLE_TRIAL_DATA)->insertGetId($itemNew);
+        DB::beginTransaction();
+        try {
+            $time = Carbon::now();
+            if($itemOld){
+                $itemNew['updated_by'] = $this->user->id;
+                $itemNew['updated_at'] = $time;
+                DB::table(TABLE_TRIAL_DATA)->where('id', $itemOld['id'])->update($itemNew);
+                $dataHistory = [];
+                $dataHistory['table_name'] = TABLE_CROP_TYPES;
+                $dataHistory['controller'] = (new \ReflectionClass(__CLASS__))->getShortName();
+                $dataHistory['method'] = __FUNCTION__;
+                $dataHistory['table_id'] = $itemOld['id'];
+                $dataHistory['action'] = DB_ACTION_EDIT;
+                unset($itemNew['updated_by'],$itemNew['updated_at'],$itemNew['trial_station_id'],$itemNew['year'],$itemNew['season_id'],$itemNew['trial_form_id'],$itemNew['variety_id'],$itemNew['entry_no']);
+                $dataHistory['data_old'] = json_encode(['data_1'=>$itemOld['data_1'],'data_2'=>$itemOld['data_2']]);
+                $dataHistory['data_new'] = json_encode($itemNew);
+                $dataHistory['created_at'] = $time;
+                $dataHistory['created_by'] = $this->user->id;
+                $this->dBSaveHistory($dataHistory, TABLE_SYSTEM_HISTORIES);
+            }
+            else{
+                $itemNew['trial_form_id'] = $formId;
+                $itemNew['created_by'] = $this->user->id;
+                $itemNew['created_at'] = $time;
+                DB::table(TABLE_TRIAL_DATA)->insertGetId($itemNew);
+            }
+            $this->updateSaveToken();
+            DB::commit();
 
-        return response()->json(['error' => '', 'messages' =>'Saved']);
+            return response()->json(['error' => '', 'messages' => 'Data Saved Successfully']);
+        }
+        catch (\Exception $ex) {
+            DB::rollback();
+            return response()->json(['error' => 'DB_SAVE_FAILED', 'messages' => __('Failed to save.')]);
+        }
     }
 }
 
