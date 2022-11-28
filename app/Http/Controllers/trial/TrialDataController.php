@@ -71,6 +71,19 @@ class TrialDataController extends RootController
     public function getItems(Request $request, $cropId,$formId,$trialStationId, $year,$seasonId): JsonResponse
     {
         if ($this->permissions->action_0 == 1) {
+            $results=DB::table(TABLE_TRIAL_DATA)
+                ->where('trial_station_id',$trialStationId)
+                ->where('year',$year)
+                ->where('season_id',$seasonId)
+                ->where('trial_form_id', $formId)
+                ->select(DB::raw('GROUP_CONCAT(entry_no) as entries'))
+                ->addSelect('variety_id')
+                ->groupBy('variety_id')
+                ->get();
+            $trial_data=[];
+            foreach ($results as $result){
+                $trial_data[$result->variety_id]=$result;
+            }
 
             $query=DB::table(TABLE_TRIAL_VARIETIES.' as trial_varieties');
             $query->select('trial_varieties.variety_id','trial_varieties.rnd_ordering','trial_varieties.rnd_code','trial_varieties.replica','trial_varieties.delivered_date','trial_varieties.sowing_date');
@@ -89,7 +102,15 @@ class TrialDataController extends RootController
             $results = $query->get();
             $items=[];
             foreach ($results as $result){
-                $result->num_data=rand(0,5);
+                if(isset($trial_data[$result->variety_id])){
+                    $result->entries=explode(',',$trial_data[$result->variety_id]->entries);
+                    $result->num_entry=count($result->entries);
+                }
+                else{
+                    $result->entries=[];
+                    $result->num_entry=0;
+                }
+
                 $items[]=$result;
             }
             return response()->json(['error'=>'','items'=> $items]);
