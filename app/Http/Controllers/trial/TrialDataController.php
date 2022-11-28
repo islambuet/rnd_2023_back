@@ -98,5 +98,31 @@ class TrialDataController extends RootController
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
         }
     }
+    public function saveItem(Request $request,$cropId,$formId): JsonResponse{
+//        $year=$request->input('year');
+//        $trial_station_id=$request->input('trial_station_id');
+//        $season_id=$request->input('season_id');
+//        $variety_id=$request->input('variety_id');
+//        $entry_no=$request->input('entry_no');
+//        $data_1=$request->input('item');
+//        $data_2=$request->input('data_2');
+        $time = Carbon::now();
+        $itemNew=$request->input('item');
+        $itemNew['trial_form_id']=$formId;
+        $itemNew['created_by'] = $this->user->id;
+        $itemNew['created_at'] = $time;
+//        $itemNew['year']=$year;
+//        $itemNew['trial_station_id']=$trial_station_id;
+//        $itemNew['season_id']=$season_id;
+//        $itemNew['variety_id']=$variety_id;
+//        $itemNew['entry_no']=$entry_no;
+        $itemNew['data_1']=json_encode($itemNew['data_1']);
+        if(isset($itemNew['data_2'])){
+            $itemNew['data_2']=json_encode($itemNew['data_2']);
+        }
+        DB::table(TABLE_TRIAL_DATA)->insertGetId($itemNew);
+
+        return response()->json(['error' => '', 'messages' =>'Saved']);
+    }
 }
 
