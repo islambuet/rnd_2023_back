@@ -5,9 +5,11 @@ use Illuminate\Support\Facades\DB;
 class TaskHelper
 {
     public static $MAX_MODULE_ACTIONS = 9;
-    public static $TRAIL_FORM_SETUP_ID = 17;
-    public static $TRAIL_DATA_ID = 18;
+    public static $TRIAL_FORM_SETUP_ID = 17;
+    public static $TRIAL_DATA_ID = 18;
     public static $VARIETY_SELECTION_ID = 23;
+    public static $TRAIL_REPORT_FORM_SETUP_ID = 26;
+    public static $TRIAL_REPORT_DATA_ID = 27;
 
     public static function getUserGroupRole($user_group_id): object
     {
@@ -70,6 +72,17 @@ class TaskHelper
         foreach ($results as $result){
             $forms[$result->crop_id][]=$result;
         }
+        $results=DB::table(TABLE_TRIAL_REPORT_FORMS)
+            ->select('id', 'name','crop_id','ordering','status')
+            ->orderBy('ordering', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->where('status', SYSTEM_STATUS_ACTIVE)
+            ->get();
+        $report_forms=[];
+        foreach ($results as $result){
+            $report_forms[$result->crop_id][]=$result;
+        }
+
         $role = [];
         if (strlen($userGroupRole->action_0) > 1) {
             $role = explode(',', trim($userGroupRole->action_0, ','));
@@ -83,7 +96,7 @@ class TaskHelper
         foreach ($tasks as $task) {
             if ($task->type == 'TASK') {
                 if (in_array($task->id, $role)) {
-                    if(($task->id==Self::$TRAIL_FORM_SETUP_ID) ||($task->id==Self::$VARIETY_SELECTION_ID)){
+                    if(($task->id==Self::$TRIAL_FORM_SETUP_ID) ||($task->id==Self::$TRAIL_REPORT_FORM_SETUP_ID)||($task->id==Self::$VARIETY_SELECTION_ID)){
                         $task->type='MODULE';
                         $children[$task->parent][$task->id] = $task;
                         foreach ($crops as $crop){
@@ -103,7 +116,7 @@ class TaskHelper
                         }
                     }
 
-                    else if($task->id==Self::$TRAIL_DATA_ID){
+                    else if(($task->id==Self::$TRIAL_DATA_ID)||($task->id==Self::$TRIAL_REPORT_DATA_ID)){
                         $task->type='MODULE';
                         $children[$task->parent][$task->id] = $task;
                         foreach ($crops as $crop){
@@ -117,18 +130,36 @@ class TaskHelper
                                 'status'=>$crop->status
                             ];
                             $children[$subModule->parent][$subModule->id] = $subModule;
-                            if(isset($forms[$crop->id])){
-                                foreach ($forms[$crop->id] as $form){
-                                    $subtask=(object)[
-                                        'id'=>$subModule->id.'_'.$form->id,
-                                        'name'=>$form->name,
-                                        'type'=>'TASK',
-                                        'parent'=>$subModule->id,
-                                        'url'=>$task->url.'/'.$crop->id.'/'.$form->id,
-                                        'ordering'=>$form->ordering,
-                                        'status'=>$form->status
-                                    ];
-                                    $children[$subtask->parent][$subtask->id] = $subtask;
+                            if($task->id==Self::$TRIAL_DATA_ID) {
+                                if (isset($forms[$crop->id])) {
+                                    foreach ($forms[$crop->id] as $form) {
+                                        $subtask = (object)[
+                                            'id' => $subModule->id . '_' . $form->id,
+                                            'name' => $form->name,
+                                            'type' => 'TASK',
+                                            'parent' => $subModule->id,
+                                            'url' => $task->url . '/' . $crop->id . '/' . $form->id,
+                                            'ordering' => $form->ordering,
+                                            'status' => $form->status
+                                        ];
+                                        $children[$subtask->parent][$subtask->id] = $subtask;
+                                    }
+                                }
+                            }
+                            else if ($task->id==Self::$TRIAL_REPORT_DATA_ID) {
+                                if (isset($report_forms[$crop->id])) {
+                                    foreach ($report_forms[$crop->id] as $form) {
+                                        $subtask = (object)[
+                                            'id' => $subModule->id . '_' . $form->id,
+                                            'name' => $form->name,
+                                            'type' => 'TASK',
+                                            'parent' => $subModule->id,
+                                            'url' => $task->url . '/' . $crop->id . '/' . $form->id,
+                                            'ordering' => $form->ordering,
+                                            'status' => $form->status
+                                        ];
+                                        $children[$subtask->parent][$subtask->id] = $subtask;
+                                    }
                                 }
                             }
 
