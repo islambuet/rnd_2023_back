@@ -18,6 +18,7 @@ class CreateTrialReportForms extends Migration
             $table->string('name');
             $table->smallInteger('crop_id');
             $table->integer('ordering')->default(9999);
+            $table->longText('fields')->nullable();
             $table->enum('status', [SYSTEM_STATUS_ACTIVE, SYSTEM_STATUS_INACTIVE, SYSTEM_STATUS_DELETE])->default(SYSTEM_STATUS_ACTIVE)->comment(SYSTEM_STATUS_ACTIVE.','. SYSTEM_STATUS_INACTIVE.','.SYSTEM_STATUS_DELETE);
             $table->integer('created_by');
             $table->integer('updated_by')->nullable();
