@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 use Illuminate\Validation\Rule;
+use function PHPUnit\Framework\isNull;
 
 
 class TrialReportDataController extends RootController
@@ -188,6 +189,45 @@ class TrialReportDataController extends RootController
     private function getItem($variety,$fields,$data): array
     {
         $row['rnd_code']=$variety->rnd_code;
+        if(isset($data[$variety->variety_id]))
+        {
+            foreach ($fields as $index=>$field){
+                if($field['formula']=='none'){
+                  if(isset($data[$variety->variety_id][$field['inputId']])){
+                      foreach ($data[$variety->variety_id][$field['inputId']] as $entry_no=>$entry_data){
+                          if(!is_null($entry_data)){
+                              $row[$index.'_'.$entry_no]=$entry_data;
+                          }
+                      }
+                  }
+                }
+                else if($field['formula']=='total'){
+                    if(isset($data[$variety->variety_id][$field['inputId']])){
+                        $row[$index.'_1']=0;
+                        foreach ($data[$variety->variety_id][$field['inputId']] as $entry_no=>$entry_data){
+                            if(is_numeric($entry_data)){
+                                $row[$index.'_1']+=$entry_data;
+                            }
+                        }
+                    }
+                }
+                else if($field['formula']=='average'){
+                    if(isset($data[$variety->variety_id][$field['inputId']])){
+                        $total=0;
+                        $entry_counts=0;
+                        foreach ($data[$variety->variety_id][$field['inputId']] as $entry_no=>$entry_data){
+                            if(is_numeric($entry_data)){
+                                $total+=$entry_data;
+                                $entry_counts++;
+                            }
+                        }
+                        if($entry_counts>1){
+                            $row[$index.'_1']=number_format($total/$entry_counts,2);
+                        }
+                    }
+                }
+            }
+        }
         return $row;
     }
 }
