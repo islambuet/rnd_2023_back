@@ -37,3 +37,12 @@ Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
     Route::post($url.'/{cropId}/{formId}/save-fields', [$controllerClass, 'saveIFields']);
 });
 
+$url='trial/report-data';
+$controllerClass= Controllers\trial\TrialReportDataController::class;
+/** @noinspection DuplicatedCode */
+Route::middleware('logged-user')->group(function()use ($url,$controllerClass){
+    Route::match(['GET','POST'],$url.'/{cropId}/{reportId}/initialize', [$controllerClass, 'initialize']);
+    Route::match(['GET','POST'],$url.'/{cropId}/{reportId}/{trialStationId}/{year}/{seasonId}/get-varieties', [$controllerClass, 'getVarieties']);
+    Route::match(['GET','POST'],$url.'/{cropId}/{reportId}/{trialStationId}/{year}/{seasonId}/get-items', [$controllerClass, 'getItems']);
+});
+
