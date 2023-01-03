@@ -149,6 +149,14 @@ class VarietySelectionController extends RootController
         }
         $variety->crop_code=$this->cropInfo->code;
         $variety->rnd_ordering=$itemNew['rnd_ordering'];
+        if($variety->whose=='Principal')
+        {
+            $variety->principal_info=DB::table(TABLE_PRINCIPALS)->where('id',$variety->principal_id)->first();
+        }
+        if($variety->whose=='Competitor')
+        {
+            $variety->competitor_info=DB::table(TABLE_COMPETITORS)->where('id',$variety->competitor_id)->first();
+        }
         $itemNew['rnd_code']=CommonHelper::get_rnd_code($variety,$year,true);
         //TODO validate crop_id
         //Input validation ends
