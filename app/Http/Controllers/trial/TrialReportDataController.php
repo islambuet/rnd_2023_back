@@ -48,10 +48,20 @@ class TrialReportDataController extends RootController
                 ->orderBy('ordering', 'ASC')
                 ->where('status', SYSTEM_STATUS_ACTIVE)
                 ->get();
-
+            $results = DB::table(TABLE_CROP_FEATURES)
+                ->select('id', 'name','crop_id')
+                ->orderBy('ordering', 'ASC')
+                ->where('status', SYSTEM_STATUS_ACTIVE)
+                ->where('crop_id', $cropId)
+                ->get();
+            $crop_features=[];
+            foreach ($results as $result){
+                $crop_features[$result->id]=$result;
+            }
             return response()->json(
                 ['error'=>'','permissions'=>$this->permissions,
                     'cropInfo'=>$this->cropInfo,
+                    'crop_features'=>$crop_features,
                     'reportInfo'=>$this->reportInfo,
                     'trial_stations' => $trial_stations,
                     'seasons'=>$seasons
