@@ -253,7 +253,7 @@ class TrialFormsController extends RootController
         $validation_rule = [];
         $validation_rule['name'] = ['required'];
         $validation_rule['trial_form_id'] = ['required'];
-        $validation_rule['type'] = ['required',Rule::in(['text','textarea','image','date','dropdown','checkbox'])];
+        $validation_rule['type'] = ['required',Rule::in(['text','textarea','image','date','dropdown','checkbox','features','video_url'])];
         $validation_rule['options'] = ['nullable'];
         $validation_rule['default'] = ['nullable'];
         $validation_rule['mandatory'] = ['required',Rule::in(['Yes','No'])];

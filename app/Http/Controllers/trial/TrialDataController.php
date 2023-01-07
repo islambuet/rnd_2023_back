@@ -54,10 +54,21 @@ class TrialDataController extends RootController
                 ->orderBy('ordering', 'ASC')
                 ->where('status', SYSTEM_STATUS_ACTIVE)
                 ->get();
+            $results = DB::table(TABLE_CROP_FEATURES)
+                ->select('id', 'name','crop_id')
+                ->orderBy('ordering', 'ASC')
+                ->where('status', SYSTEM_STATUS_ACTIVE)
+                ->where('crop_id', $cropId)
+                ->get();
+            $crop_features=[];
+            foreach ($results as $result){
+                $crop_features[$result->id]=$result;
+            }
 
             return response()->json(
                 ['error'=>'','permissions'=>$this->permissions,
                     'cropInfo'=>$this->cropInfo,
+                    'crop_features'=>$crop_features,
                     'formInfo'=>$this->formInfo,
                     'inputFields'=>$inputFields,
                     'trial_stations' => $trial_stations,
@@ -91,7 +102,7 @@ class TrialDataController extends RootController
             $query->where('trial_varieties.year',$year);
             $query->where('trial_varieties.season_id', $seasonId);
             $query->join(TABLE_VARIETIES.' as varieties', 'varieties.id', '=', 'trial_varieties.variety_id');
-            $query->addSelect('varieties.name as variety_name','varieties.crop_type_id');
+            $query->addSelect('varieties.name as variety_name','varieties.crop_type_id','varieties.crop_feature_ids');
             $query->join(TABLE_CROP_TYPES.' as crop_types', 'crop_types.id', '=', 'varieties.crop_type_id');
             $query->addSelect('crop_types.name as crop_type_name','crop_types.crop_id');
             $query->join(TABLE_CROPS.' as crops', 'crops.id', '=', 'crop_types.crop_id');
