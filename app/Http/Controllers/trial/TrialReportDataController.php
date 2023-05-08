@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers\trial;
 
+use App\Helpers\CommonHelper;
 use App\Http\Controllers\RootController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -87,7 +88,12 @@ class TrialReportDataController extends RootController
             $query->where('trial_varieties.sowing_status', SYSTEM_STATUS_YES);
             $query->where('crop_types.crop_id', $cropId);
             $results = $query->get();
-            return response()->json(['error'=>'','varieties'=> $results]);
+            $varieties=array();
+            foreach ($results as $result){
+                $result->rnd_code=CommonHelper::get_display_rnd_code($result->rnd_code,$this->permissions);
+                $varieties[]=$result;
+            }
+            return response()->json(['error'=>'','varieties'=> $varieties]);
         }
         else {
             return response()->json(['error' => 'ACCESS_DENIED', 'messages' => __('You do not have access on this page')]);
@@ -198,7 +204,7 @@ class TrialReportDataController extends RootController
     }
     private function getItem($variety,$fields,$data): array
     {
-        $row['rnd_code']=$variety->rnd_code;
+        $row['rnd_code']=CommonHelper::get_display_rnd_code($variety->rnd_code,$this->permissions);
         if(isset($data[$variety->variety_id]))
         {
             foreach ($fields as $index=>$field){
