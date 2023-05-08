@@ -5,6 +5,7 @@ use App\Http\Controllers\RootController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+use App\Helpers\CommonHelper;
 use App\Helpers\TaskHelper;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -113,6 +114,7 @@ class TrialDataController extends RootController
             $results = $query->get();
             $items=[];
             foreach ($results as $result){
+                $result->rnd_code=CommonHelper::get_display_rnd_code($result->rnd_code,$this->permissions);
                 if(isset($trial_data[$result->variety_id])){
                     $result->entries=explode(',',$trial_data[$result->variety_id]->entries);
                     $result->num_entry=count($result->entries);
