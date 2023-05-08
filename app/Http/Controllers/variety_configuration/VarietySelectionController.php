@@ -157,7 +157,7 @@ class VarietySelectionController extends RootController
         {
             $variety->competitor_info=DB::table(TABLE_COMPETITORS)->where('id',$variety->competitor_id)->first();
         }
-        $itemNew['rnd_code']=CommonHelper::get_rnd_code($variety,$year,true);
+        $itemNew['rnd_code']=CommonHelper::generate_rnd_code($variety,$year);
         //TODO validate crop_id
         //Input validation ends
         DB::beginTransaction();
