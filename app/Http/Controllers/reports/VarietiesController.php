@@ -70,7 +70,7 @@ class VarietiesController extends RootController
     {
         if ($this->permissions->action_0 == 1) {
             $options = $request->input('options');
-            $perPage = $request->input('perPage', 50);
+            $perPage = $request->input('perPage', -1);
             //$query=DB::table(TABLE_CROP_TYPES);
             $query=DB::table(TABLE_VARIETIES.' as varieties');
             $query->select('varieties.*');
